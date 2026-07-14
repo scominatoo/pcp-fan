@@ -80,35 +80,68 @@ export class OrdensProducaoService {
 
   /** Dados para montar o formulário de nova OP (produto + roteiro). */
   async prepararCriacao(produtoCodigo: string) {
+    // Remove espaços das pontas — no legado o desenho às vezes vem com padding.
     const limpo = produtoCodigo.trim();
     if (!limpo) {
       throw new BadRequestException('Informe o desenho do cliente');
     }
 
+    // 1) Tenta achar o produto pelo desenho digitado (cliente ou Sparta).
     const produto = await this.resolverProduto(limpo);
-    if (!produto) {
-      throw new BadRequestException(
-        'Desenho não cadastrado — verifique o cadastro de produtos',
-      );
-    }
 
-    const processo = await this.prisma.processoProdutivo.findUnique({
-      where: { produtoCodigo: limpo },
+    // 2) Chaves possíveis do processo = texto digitado + desenhos do produto.
+    const chavesProcesso = [
+      limpo,
+      produto?.desenhoCliente?.trim(),
+      produto?.desenhoSparta?.replace(/\./g, '').trim(),
+    ].filter((v): v is string => Boolean(v && v.length > 0));
+
+    // Match exato OU começa com o código (cobre campos com espaços do COBOL).
+    const processo = await this.prisma.processoProdutivo.findFirst({
+      where: {
+        OR: [
+          { produtoCodigo: { in: [...new Set(chavesProcesso)] } },
+          ...[...new Set(chavesProcesso)].map((chave) => ({
+            produtoCodigo: { startsWith: chave },
+          })),
+        ],
+      },
       include: {
         operacoes: { orderBy: { numeroOperacao: 'asc' } },
+        produto: true,
       },
     });
 
-    if (!processo || processo.operacoes.length === 0) {
+    // Sem produto E sem processo → mensagem clara apontando o menu Processos.
+    if (!produto && !processo) {
       throw new BadRequestException(
-        'Processo produtivo não cadastrado para este desenho (PC1070)',
+        `Desenho "${limpo}" não encontrado em Produtos nem em Processos. ` +
+          'Abra Cadastros → Processos para ver códigos válidos (ex.: 93288311).',
       );
     }
 
+    if (!processo || processo.operacoes.length === 0) {
+      throw new BadRequestException(
+        `Não há roteiro (PC1070) com operações para o desenho "${limpo}". ` +
+          'Confira em Cadastros → Processos.',
+      );
+    }
+
+    if (!produto && !processo.produto) {
+      // Processo existe, mas não está ligado a um produto — ainda permite emitir OP.
+      // (Na prática o create exigir produto; aqui já avisamos cedo).
+      throw new BadRequestException(
+        `Roteiro encontrado (${processo.produtoCodigo.trim()}), ` +
+          'mas esse desenho não está no cadastro de Produtos. Cadastre o produto ou use outro desenho.',
+      );
+    }
+
+    const produtoFinal = produto ?? processo.produto!;
+
     return {
-      produtoCodigo: limpo,
-      produtoDescricao: produto.descricao,
-      produtoCodigoFormatado: formatarCodigoProduto(produto),
+      produtoCodigo: processo.produtoCodigo.trim(),
+      produtoDescricao: produtoFinal.descricao,
+      produtoCodigoFormatado: formatarCodigoProduto(produtoFinal),
       materiasPrimas: processo.materiasPrimas,
       operacoes: processo.operacoes.map((op) => {
         const alternativas = this.parseAlternativas(op.equipamentosTab);
@@ -145,8 +178,14 @@ export class OrdensProducaoService {
       throw new BadRequestException('Desenho/produto não cadastrado');
     }
 
-    const processo = await this.prisma.processoProdutivo.findUnique({
-      where: { produtoCodigo },
+    const chavesProcesso = [
+      produtoCodigo,
+      produto.desenhoCliente?.trim(),
+      produto.desenhoSparta?.replace(/\./g, '').trim(),
+    ].filter((v): v is string => Boolean(v && v.length > 0));
+
+    const processo = await this.prisma.processoProdutivo.findFirst({
+      where: { produtoCodigo: { in: [...new Set(chavesProcesso)] } },
       include: {
         operacoes: { orderBy: { numeroOperacao: 'asc' } },
       },
@@ -198,7 +237,8 @@ export class OrdensProducaoService {
       const op = await this.prisma.ordemProducao.create({
         data: {
           codigo,
-          produtoCodigo,
+          // Grava a chave canônica do processo (alinhada ao PCPA70I)
+          produtoCodigo: processo.produtoCodigo,
           produtoId: produto.id,
           quantidade: dto.quantidade,
           tipo,

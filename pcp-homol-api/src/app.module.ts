@@ -7,6 +7,7 @@ import { EquipamentosModule } from './equipamentos/equipamentos.module';
 import { HealthModule } from './health/health.module';
 import { MateriaPrimaModule } from './materia-prima/materia-prima.module';
 import { OrdensProducaoModule } from './ordens-producao/ordens-producao.module';
+import { ProcessosModule } from './processos/processos.module';
 import { ProgramacaoModule } from './programacao/programacao.module';
 import { RelatoriosModule } from './relatorios/relatorios.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -26,6 +27,7 @@ import { SecoesModule } from './secoes/secoes.module';
     MateriaPrimaModule,
     EquipamentosModule,
     SecoesModule,
+    ProcessosModule,
     OrdensProducaoModule,
     ProgramacaoModule,
     RelatoriosModule,

@@ -15,6 +15,8 @@ import { ProgramacaoFormPage } from './pages/programacao/ProgramacaoFormPage';
 import { ProgramacaoPage } from './pages/programacao/ProgramacaoPage';
 import { RelatorioPage } from './pages/relatorios/RelatorioPage';
 import { RelatoriosHubPage } from './pages/relatorios/RelatoriosHubPage';
+import { ProcessoDetailPage } from './pages/processos/ProcessoDetailPage';
+import { ProcessosPage } from './pages/processos/ProcessosPage';
 import { ProdutoFormPage } from './pages/produtos/ProdutoFormPage';
 import { ProdutosPage } from './pages/produtos/ProdutosPage';
 
@@ -30,6 +32,8 @@ export default function App() {
               <Route index element={<HomePage />} />
               <Route path="produtos" element={<ProdutosPage />} />
               <Route path="produtos/:id" element={<ProdutoFormPage />} />
+              <Route path="processos" element={<ProcessosPage />} />
+              <Route path="processos/:id" element={<ProcessoDetailPage />} />
               <Route path="materia-prima" element={<MateriaPrimaPage />} />
               <Route path="materia-prima/:id" element={<MateriaPrimaFormPage />} />
               <Route path="ordens-producao" element={<OrdensProducaoPage />} />

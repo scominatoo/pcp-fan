@@ -26,6 +26,13 @@ const MODULOS = [
     unit: 'itens',
   },
   {
+    to: '/processos',
+    titulo: 'Processos',
+    descricao: 'Roteiros PC1070 — operações e MPs por desenho.',
+    stat: '2.457',
+    unit: 'processos',
+  },
+  {
     to: '/materia-prima',
     titulo: 'Matéria-prima',
     descricao: 'Saldo, mínimo e máximo de estoque.',
