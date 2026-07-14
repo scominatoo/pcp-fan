@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pcp-homol-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pcp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pcp_dev_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-pcp_homol}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pcp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pcp} -d ${POSTGRES_DB:-pcp_homol}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pcp_pgdata:

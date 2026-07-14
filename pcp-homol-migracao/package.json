@@ -1,0 +1,31 @@
+{
+  "name": "pcp-homol-migracao",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Migração dos arquivos .DAT COBOL para PostgreSQL",
+  "scripts": {
+    "build": "tsc",
+    "migrar:cadastros": "tsx src/migrar-cadastros.ts",
+    "migrar:processo": "tsx src/migrar-processo.ts",
+    "migrar:ops": "tsx src/migrar-ops.ts",
+    "migrar:baixas": "tsx src/migrar-baixas.ts",
+    "migrar:baixas-mp": "tsx src/migrar-baixas-mp.ts",
+    "migrar:programacao": "tsx src/migrar-programacao.ts",
+    "validar:arquivo": "tsx src/validar-arquivo.ts",
+    "validar:indexed": "tsx src/validar-indexed.ts",
+    "prisma:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "prisma": "^6.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "prisma": {
+    "schema": "./prisma/schema.prisma"
+  }
+}

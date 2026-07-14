@@ -1,0 +1,369 @@
+// Schema PostgreSQL — módulo PCP (homologação FANANDRI)
+// Origem: estruturas FD dos programas COBOL em /Users/scominato/FANANDRI/FONTES
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Cadastros mestres — produtos
+// Fonte legada: PCPA19I, PCPA20I, PCPA18I (PC1018)
+// ---------------------------------------------------------------------------
+
+model ProdutoGrupo {
+  id          Int       @id @default(autoincrement())
+  codigo      Int       @unique // GR-GRUPO (3 dígitos)
+  descricao   String    @db.VarChar(25)
+  explosao    String?   @db.VarChar(1)
+  produtos    Produto[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ProdutoClassificacao {
+  id          Int       @id @default(autoincrement())
+  codigo      Int       @unique // CL-CODIGO (2 dígitos)
+  descricao   String    @db.VarChar(40)
+  produtos    Produto[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Produto {
+  id                Int       @id @default(autoincrement())
+  grupoCodigo       Int
+  classificacaoCodigo Int
+  itemCodigo        Int       // CI-ITEM (5 dígitos)
+  descricao         String    @db.VarChar(40)
+  unidade           String?   @db.VarChar(3)
+  precoCusto        Decimal?  @db.Decimal(10, 2)
+  precoVenda        Decimal?  @db.Decimal(10, 2)
+  quantidadeEstoque Decimal?  @db.Decimal(12, 3)
+  estoqueMin        Decimal?  @db.Decimal(9, 3)
+  estoqueMax        Decimal?  @db.Decimal(9, 3)
+  desenhoSparta     String?   @db.VarChar(15)
+  desenhoCliente    String?   @db.VarChar(15)
+  planejamento      String?   @db.VarChar(1)
+  peso              Decimal?  @db.Decimal(7, 3)
+  pesoBruto         Decimal?  @db.Decimal(6, 3)
+  grupo             ProdutoGrupo?        @relation(fields: [grupoCodigo], references: [codigo])
+  classificacao     ProdutoClassificacao? @relation(fields: [classificacaoCodigo], references: [codigo])
+  ordensProducao    OrdemProducao[]
+  processos         ProcessoProdutivo[]
+  programacoes      ProgramacaoEntrega[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([grupoCodigo, classificacaoCodigo, itemCodigo])
+  @@index([desenhoCliente])
+}
+
+// ---------------------------------------------------------------------------
+// Matéria-prima
+// Fonte legada: PCPA22I, PCPA22II, PCPA22B (PC1022, POWPRIMA)
+// ---------------------------------------------------------------------------
+
+model MateriaPrima {
+  id              Int       @id @default(autoincrement())
+  classeLetra     String    @db.VarChar(1)
+  classeNumero    Int
+  itemCodigo      Int
+  descricao       String    @db.VarChar(40)
+  unidade         String?   @db.VarChar(3)
+  espessura       Decimal?  @db.Decimal(5, 2)
+  comprimento     Int?
+  largura         Decimal?  @db.Decimal(8, 3)
+  qualidade       String?   @db.VarChar(10)
+  dureza          String?   @db.VarChar(10)
+  quantidade      Decimal?  @db.Decimal(11, 2)
+  estoqueMin      Decimal?  @db.Decimal(8, 2)
+  estoqueMax      Decimal?  @db.Decimal(8, 2)
+  descricaoCompl1 String?   @db.VarChar(60)
+  descricaoCompl2 String?   @db.VarChar(75)
+  desenhoCliente  String?   @db.VarChar(15)
+  movimentos      MovimentoMateriaPrima[]
+  baixasOp        OrdemProducaoBaixaMateriaPrima[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([classeLetra, classeNumero, itemCodigo])
+}
+
+// ---------------------------------------------------------------------------
+// Estrutura produtiva
+// Fonte: PCPA64I, PCPA69I, PCPA70I, PCPA70XI, PCPA106I, PCPA129I
+// ---------------------------------------------------------------------------
+
+model Equipamento {
+  id          Int       @id @default(autoincrement())
+  grupoCodigo Int
+  codigo      Int
+  descricao   String?   @db.VarChar(30)
+  modelo      String?   @db.VarChar(20)
+  marca       String?   @db.VarChar(20)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([grupoCodigo, codigo])
+}
+
+model Secao {
+  id            Int       @id @default(autoincrement())
+  codigo        Int       @unique
+  descricao     String?   @db.VarChar(40)
+  responsavel1  String?   @db.VarChar(30)
+  responsavel2  String?   @db.VarChar(30)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model DesenhoCliente {
+  id              Int       @id @default(autoincrement())
+  desenhoCliente  String    @unique @db.VarChar(15)
+  descricao       String?   @db.VarChar(40)
+  unidade         String?   @db.VarChar(3)
+  qtdeEstoque     Decimal?  @db.Decimal(9, 3)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Processo produtivo (roteiro)
+// Fonte: PCPA70I, PCPA70XI (PC1070)
+// ---------------------------------------------------------------------------
+
+model ProcessoProdutivo {
+  id              Int                @id @default(autoincrement())
+  produtoCodigo   String             @unique @db.VarChar(15)
+  produtoId       Int?
+  produto         Produto?           @relation(fields: [produtoId], references: [id])
+  pesoBruto       Decimal?           @db.Decimal(6, 3)
+  pesoLiquido     Decimal?           @db.Decimal(7, 3)
+  qtdeOp          Int?
+  producaoHr      Int?
+  /// MPs do processo (até 5 itens) — JSON [{classeLetra, classeNumero, itemCodigo, peso}]
+  materiasPrimas  Json?
+  operacoes       ProcessoOperacao[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+
+model ProcessoOperacao {
+  id                   Int               @id @default(autoincrement())
+  processoId           Int
+  processo             ProcessoProdutivo @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  numeroOperacao       Int
+  descricao            String?           @db.VarChar(60)
+  observacao1          String?           @db.VarChar(65)
+  observacao2          String?           @db.VarChar(35)
+  plano                String?           @db.VarChar(20)
+  secaoCodigo          Int?
+  preparacaoSegundos   Int?
+  producaoSegundos     Int?
+  cacamba              String?           @db.VarChar(15)
+  pecas                Int?
+  equipamentoEscolhido Int?
+  /// Alternativas de equipamento/ferramenta (PROC-OP-TAB × 15)
+  equipamentosTab      Json?
+  createdAt            DateTime          @default(now())
+
+  @@unique([processoId, numeroOperacao])
+}
+
+// ---------------------------------------------------------------------------
+// Ordem de produção
+// Fonte: PCPA28I, PCPA28II, PCPA28E, PCPA71I
+// ---------------------------------------------------------------------------
+
+model OrdemProducao {
+  id                Int       @id @default(autoincrement())
+  codigo            Int       @unique // OP-CODIGO (8 dígitos)
+  produtoCodigo     String    @db.VarChar(15) // código legado texto (grupo+class+item formatado)
+  produtoId         Int?
+  produto           Produto?  @relation(fields: [produtoId], references: [id])
+  quantidade        Int
+  dataAbertura      DateTime?
+  horaAbertura      String?   @db.VarChar(8) // HH:MM:SS
+  baixada           Boolean   @default(false)
+  baixadaMp         Boolean   @default(false)
+  baixadaProduto    Boolean   @default(false)
+  tipoProc          String?   @db.VarChar(1)
+  tipo              String?   @db.VarChar(3) // PRO, PIL, TRY, PRD
+  clienteNome       String?   @db.VarChar(40)
+  operacoes         OrdemProducaoOperacao[]
+  baixaConsolidada  OrdemProducaoBaixaConsolidada?
+  baixasOperacao    OrdemProducaoBaixaOperacao[]
+  baixasMateriaPrima OrdemProducaoBaixaMateriaPrima[]
+  movimentosMp       MovimentoMateriaPrima[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([baixada])
+  @@index([produtoCodigo])
+}
+
+model OrdemProducaoOperacao {
+  id                  Int       @id @default(autoincrement())
+  ordemProducaoId     Int
+  ordemProducao       OrdemProducao @relation(fields: [ordemProducaoId], references: [id], onDelete: Cascade)
+  numeroOperacao      Int
+  equipamentoGrupo    Int?
+  equipamentoCodigo   Int?
+  indice              Int?
+  ferramentaFabrica   String?   @db.VarChar(1)
+  ferramentaNumero    String?   @db.VarChar(15)
+  ferramentaMatricula Int?
+  dataEncerramento    DateTime?
+  createdAt           DateTime  @default(now())
+
+  @@unique([ordemProducaoId, numeroOperacao])
+}
+
+/// Baixa consolidada da OP — fonte PCPA71I (PC1028 ENTRA-BAIXA-OP)
+model OrdemProducaoBaixaConsolidada {
+  id               Int           @id @default(autoincrement())
+  ordemProducaoId  Int           @unique
+  ordemProducao    OrdemProducao @relation(fields: [ordemProducaoId], references: [id], onDelete: Cascade)
+  dataBaixa        DateTime?
+  horaBaixa        String?       @db.VarChar(5) // HH:MM
+  pecasProduzidas  Int           @default(0)
+  mpConsumida      Int           @default(0)
+  rolos            Int           @default(0)
+  /// Tempos por operação 1–25: [{ prepMin, prodMin }]
+  temposOperacoes  Json?
+  turno1           Int           @default(0)
+  turno2           Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+/// Baixa por operação — fonte PCPA132I (PC1132)
+model OrdemProducaoBaixaOperacao {
+  id                Int           @id @default(autoincrement())
+  ordemProducaoId   Int
+  ordemProducao     OrdemProducao @relation(fields: [ordemProducaoId], references: [id], onDelete: Cascade)
+  numeroOperacao    Int
+  dataLancamento    DateTime?
+  dataInicio        DateTime?
+  horaInicio        String?       @db.VarChar(8)
+  dataFim           DateTime?
+  horaFim           String?       @db.VarChar(8)
+  diasTotal         Int?
+  tempoTotalHoras   Int?
+  tempoTotalMinutos Int?
+  tempoTotalSegundos Int?
+  equipamentoGrupo  Int?
+  equipamentoCodigo Int?
+  qtdeSaida         Int           @default(0)
+  pesoSaida         Decimal?      @db.Decimal(8, 2)
+  dataSaida         DateTime?
+  qtdeEntrada       Int           @default(0)
+  pesoEntrada       Decimal?      @db.Decimal(8, 2)
+  dataEntrada       DateTime?
+  diferQtde         Int?
+  diferPeso         Decimal?      @db.Decimal(8, 2)
+  diferTempo        Int?
+  atualizouEstoque  Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@unique([ordemProducaoId, numeroOperacao])
+  @@index([ordemProducaoId])
+}
+
+/// Baixa de matéria-prima vinculada à OP — fonte PCPA109I (PC1109)
+model OrdemProducaoBaixaMateriaPrima {
+  id              Int           @id @default(autoincrement())
+  ordemProducaoId Int
+  ordemProducao   OrdemProducao @relation(fields: [ordemProducaoId], references: [id], onDelete: Cascade)
+  materiaPrimaId  Int
+  materiaPrima    MateriaPrima  @relation(fields: [materiaPrimaId], references: [id])
+  quantidade      Decimal       @db.Decimal(10, 2)
+  qtdeRolos       Int           @default(0)
+  dataBaixa       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([ordemProducaoId])
+  @@index([materiaPrimaId])
+}
+
+/// Movimento de matéria-prima — fonte PCPA76I (PC1076) e lançamentos manuais
+model MovimentoMateriaPrima {
+  id              Int           @id @default(autoincrement())
+  /// Chave do lote NRMP (MV-CODIGO) — vazio em lançamentos PC1109
+  loteLetra       String        @default("") @db.VarChar(2)
+  loteNumero      Int           @default(0)
+  loteLetra2      String        @default("") @db.VarChar(2)
+  indice          Int           @default(0)
+  tipo            String        @db.VarChar(1) // B = baixa, R = reversão/entrada
+  dataMovimento   DateTime?
+  nota            Int?
+  materiaPrimaId  Int?
+  materiaPrima    MateriaPrima? @relation(fields: [materiaPrimaId], references: [id])
+  classeLetra     String        @db.VarChar(1)
+  classeNumero    Int
+  itemCodigo      Int
+  qtdeRolos       Int           @default(0)
+  quantidade      Decimal       @db.Decimal(10, 2)
+  flag            String?       @db.VarChar(3)
+  ordemProducaoId Int?
+  ordemProducao   OrdemProducao? @relation(fields: [ordemProducaoId], references: [id])
+  origem          String        @default("PCPA76I") @db.VarChar(16)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([loteLetra, loteNumero, loteLetra2, indice, tipo, dataMovimento, nota, classeLetra, classeNumero, itemCodigo])
+  @@index([materiaPrimaId])
+  @@index([ordemProducaoId])
+  @@index([tipo])
+}
+
+// ---------------------------------------------------------------------------
+// Programação de entregas
+// Fonte: PCPA66I, PCPA68I (PC1066, PC1133)
+// ---------------------------------------------------------------------------
+
+model ProgramacaoEntrega {
+  id                  Int       @id @default(autoincrement())
+  dataProgramacao     DateTime
+  produtoId           Int?
+  produto             Produto?  @relation(fields: [produtoId], references: [id])
+  grupoCodigo         Int
+  classificacaoCodigo Int
+  itemCodigo          Int
+  plano               String?   @db.VarChar(2)
+  flag                String?   @db.VarChar(1)
+  quantidade          Int       @default(0)
+  pedidoRef           String?   @db.VarChar(15)
+  pedidoRef2          String?   @db.VarChar(15)
+  desenhoCliente      String?   @db.VarChar(15)
+  qtdeEntregue        Int       @default(0)
+  qtdeAProduzir       Int       @default(0)
+  devolvido           Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@unique([dataProgramacao, grupoCodigo, classificacaoCodigo, itemCodigo, plano, flag, desenhoCliente])
+  @@index([dataProgramacao])
+  @@index([grupoCodigo, classificacaoCodigo, itemCodigo])
+}
+
+// ---------------------------------------------------------------------------
+// Controle de migração — rastreia carga dos DAT legados
+// ---------------------------------------------------------------------------
+
+model MigracaoLog {
+  id            Int       @id @default(autoincrement())
+  arquivoOrigem String    @db.VarChar(64)
+  registrosLidos Int
+  registrosOk   Int
+  registrosErro Int
+  mensagem      String?   @db.Text
+  executadoEm   DateTime  @default(now())
+}
