@@ -68,7 +68,11 @@ Toda decisão de arquitetura, escopo, modelo de dados e plano de execução deve
 | Repositórios separados sob `pcp-homol/` | ✅ |
 | Docker + PostgreSQL | ✅ |
 | Migração cadastros (grupos, classif., produtos, MP) | ✅ |
+| Migração Pacote A (desenhos, seções, equipamentos) | ✅ |
 | Migração processo + OP (125.244 operações) | ✅ |
+| Migração Pacote B (ferramentas + complemento processo) | ✅ |
+| Migração Pacote C (complemento MP + clientes) | ✅ |
+| Migração Pacote D (pedidos, NRMP, saldo) | ✅ |
 | API + telas cadastros (Fase 1) | ✅ |
 | API + telas OP + criação + emissão (Fase 2) | ✅ |
 | Homologação técnica Fase 2 (E5) | ✅ |
@@ -78,6 +82,8 @@ Toda decisão de arquitetura, escopo, modelo de dados e plano de execução deve
 | API + telas relatórios (Fase 5) | ✅ |
 | CI/CD GitHub | ⬜ pendente (C5) |
 | Homologação funcional com cliente | ⬜ pendente |
+
+Mapa detalhado arquivo → tabela: [05-modelo-dados.md](05-modelo-dados.md).
 
 ### Próximas ações
 

@@ -46,36 +46,48 @@ rebuild pcpa22i.dat, arqprima.txt /t:lii
 
 ## Mapa arquivo → tabela
 
-| Arquivo legado | Programa | Tabela Prisma | Status schema |
-|----------------|----------|---------------|---------------|
-| `PCPA19I.DAT` | PC1019 | `ProdutoGrupo` | ✅ |
-| `PCPA20I.DAT` | PC1020 | `ProdutoClassificacao` | ✅ |
-| `PCPA18I.DAT` | PC1018 | `Produto` | ✅ |
-| `PCPA22I.DAT` | PC1022 | `MateriaPrima` | ✅ |
-| `PCPA22II.DAT` | PC1022 | complemento MP | ⏳ |
-| `PCPA22B.DAT` | PC1022 | desenho MP | ⏳ |
-| `PCPA64I.DAT` | PC1064 | `Equipamento` | ✅ |
-| `PCPA69I.DAT` | PC1069 | `Secao` | ✅ |
-| `PCPA106I.DAT` | PC1106 | `DesenhoCliente` | ✅ |
-| `PCPA70I.DAT` | PC1070 | processo produtivo | ⏳ |
-| `PCPA70C.DAT` | PC1070 | processo complemento | ⏳ |
-| `PCPA70XI.DAT` | PC1070 | roteiro operações | ⏳ |
-| `PCPA129I.DAT` | PC1128 | ferramentas | ⏳ |
-| `PCPA28I.DAT` | PC1028 | `OrdemProducao` | ✅ |
-| `PCPA28II.DAT` | PC1028 | cliente na OP | ⏳ |
-| `PCPA28E.DAT` | PC1028 | `OrdemProducaoOperacao` | ✅ |
-| `PCPA71I.DAT` | PC1028 | `OrdemProducaoBaixaConsolidada` | ✅ |
-| `PCPA132I.DAT` | PC1132 | `OrdemProducaoBaixaOperacao` | ✅ |
-| `PCPA66I.DAT` | PC1066 | `ProgramacaoEntrega` | ✅ |
-| `PCPA68I.DAT` | PC1097 | saldo planejamento | ⏳ |
-| `PCPA76I.DAT` | PC1076 | `MovimentoMateriaPrima` | ✅ |
-| `PCPA109I.DAT` | PC1109 | `OrdemProducaoBaixaMateriaPrima` | ✅ |
-| `PCPA73I.DAT` | PC1073 | NRMP | ⏳ |
-| `PCPA73II.DAT` | PC1073 | consulta NRMP | ⏳ |
-| `PCPA41I.DAT` | PC1034 | pedidos/requisições | ⏳ |
-| `PCPA41II.DAT` | PC1034 | pedidos MP abertos | ⏳ |
-| `PCPA04I.DAT` | PC1004 | clientes (referência) | ⏳ |
-| — | — | `MigracaoLog` | ✅ (controle interno) |
+Atualizado em **14/07/2026** (Pacotes A–D migrados).  
+Legenda: ✅ migrado no PostgreSQL · ⚠️ parcial / quase vazio no legado · ⬜ não aplicável
+
+| Arquivo legado | Programa | Tabela Prisma | Status migração | Registros no banco |
+|----------------|----------|---------------|-----------------|--------------------|
+| `PCPA19I.DAT` | PC1019 | `ProdutoGrupo` | ✅ | 254 |
+| `PCPA20I.DAT` | PC1020 | `ProdutoClassificacao` | ✅ | 35 |
+| `PCPA18I.DAT` | PC1018 | `Produto` | ✅ | 1.834 |
+| `PCPA22I.DAT` | PC1022 | `MateriaPrima` | ✅ | 3.298 |
+| `PCPA22II.DAT` | PC1022 | `MateriaPrima` (compl. desc/preço) | ✅ | 3.307 enriquecidos |
+| `PCPA22B.DAT` | PC1022 | `MateriaPrima` (desenho/extras) | ✅ | 2.129 enriquecidos |
+| `PCPA64I.DAT` | PC1064 | `Equipamento` | ✅ | 191 |
+| `PCPA69I.DAT` | PC1069 | `Secao` | ✅ | 22 |
+| `PCPA106I.DAT` | PC1106 | `DesenhoCliente` | ✅ | 2.763 |
+| `PCPA70I.DAT` | PC1070 | `ProcessoProdutivo` | ✅ | 2.457 |
+| `PCPA70C.DAT` | PC1070 | `materiasPrimasComplemento` | ⚠️ | 1 (legado quase vazio) |
+| `PCPA70XI.DAT` | PC1070 | `ProcessoOperacao` | ✅ | 12.307 |
+| `PCPA129I.DAT` | PC1128 | `Ferramenta` | ✅ | 2.052 |
+| `PCPA28I.DAT` | PC1028 | `OrdemProducao` | ✅ | 72.000 |
+| `PCPA28II.DAT` | PC1028 | `OrdemProducao.clienteNome` | ✅ | ~71.954 |
+| `PCPA28E.DAT` | PC1028 | `OrdemProducaoOperacao` | ✅ | 125.244 |
+| `PCPA71I.DAT` | PC1028 | `OrdemProducaoBaixaConsolidada` | ✅ | 26.350 |
+| `PCPA132I.DAT` | PC1132 | `OrdemProducaoBaixaOperacao` | ✅ | 20.825 |
+| `PCPA66I.DAT` | PC1066 | `ProgramacaoEntrega` | ✅ | 1.383 |
+| `PCPA68I.DAT` | PC1097 | `SaldoPlanejamento` | ⚠️ | 7 (legado pequeno) |
+| `PCPA76I.DAT` | PC1076 | `MovimentoMateriaPrima` | ✅ | 1.562 |
+| `PCPA109I.DAT` | PC1109 | `OrdemProducaoBaixaMateriaPrima` | ⚠️ | 0 (1 registro no legado, ignorado) |
+| `PCPA73I.DAT` | PC1073 | `Nrmp` | ✅ | 3.054 |
+| `PCPA73II.DAT` | PC1073 | `NrmpConsulta` | ⚠️ | 1 (legado quase vazio) |
+| `PCPA41I.DAT` | PC1041 | `PedidoCompra` | ✅ | 11.398 |
+| `PCPA41II.DAT` | PC1041 | `PedidoMpAberto` | ✅ | 83.321 |
+| `PCPA04I.DAT` | PC1004 | `Cliente` | ✅ | 813 |
+| — | — | `MigracaoLog` | ✅ | controle interno |
+
+### Ainda pendente (não é buraco de dados mestres)
+
+| Item | Status |
+|------|--------|
+| **B8** — conferência manual totais/amostra vs COBOL | ⬜ |
+| Aceite funcional FANANDRI (Fases 1–5) | ⬜ |
+| CI/CD GitHub (C5) | ⬜ |
+| API/telas para Cliente, Ferramenta, Pedido, NRMP | ⬜ (dados migrados; UI futura) |
 
 ---
 

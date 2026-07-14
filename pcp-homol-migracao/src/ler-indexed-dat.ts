@@ -121,6 +121,110 @@ export const INDEXED_PCPA66I: ConfigArquivoIndexed = {
   tamanhoLogico: 105,
 };
 
+/** Equipamentos — PC1064 / PCPA64I (calibrado 14/07/2026) */
+export const INDEXED_PCPA64I: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA64I.DAT',
+  offsetInicial: 130,
+  passoFisico: 292,
+  tamanhoLogico: 288,
+};
+
+/** Seções — PC1069 / PCPA69I (calibrado 14/07/2026) */
+export const INDEXED_PCPA69I: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA69I.DAT',
+  offsetInicial: 130,
+  passoFisico: 260,
+  tamanhoLogico: 256,
+};
+
+/** Desenho do cliente — PC1106 / PCPA106I (calibrado 14/07/2026) */
+export const INDEXED_PCPA106I: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA106I.DAT',
+  offsetInicial: 130,
+  passoFisico: 196,
+  tamanhoLogico: 192,
+};
+
+/** Complemento de MPs do processo — PC1070 / PCPA70C (calibrado 14/07/2026) */
+export const INDEXED_PCPA70C: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA70C.DAT',
+  offsetInicial: 130,
+  passoFisico: 134,
+  tamanhoLogico: 131,
+};
+
+/** Complemento MP (descrições/preço) — PC1022 / PCPA22II */
+export const INDEXED_PCPA22II: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA22II.DAT',
+  offsetInicial: 130,
+  passoFisico: 228,
+  tamanhoLogico: 223,
+};
+
+/** Complemento MP (desenho/textos) — PC1022 / PCPA22B */
+export const INDEXED_PCPA22B: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA22B.DAT',
+  offsetInicial: 130,
+  passoFisico: 772,
+  tamanhoLogico: 768,
+};
+
+/** Clientes — PC1004 / PCPA04I */
+export const INDEXED_PCPA04I: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA04I.DAT',
+  offsetInicial: 130,
+  passoFisico: 528,
+  tamanhoLogico: 524,
+};
+
+/** Ferramentas — PC1128 / PCPA129I (calibrado 14/07/2026) */
+export const INDEXED_PCPA129I: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA129I.DAT',
+  offsetInicial: 130,
+  passoFisico: 608,
+  tamanhoLogico: 606,
+};
+
+/** Pedido compra MP — PCPA41I (calibrado 14/07/2026) */
+export const INDEXED_PCPA41I: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA41I.DAT',
+  offsetInicial: 130,
+  passoFisico: 1868,
+  tamanhoLogico: 1863,
+};
+
+/** Pedido MP aberto — PCPA41II */
+export const INDEXED_PCPA41II: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA41II.DAT',
+  offsetInicial: 130,
+  passoFisico: 36,
+  tamanhoLogico: 32,
+};
+
+/** NRMP — PCPA73I */
+export const INDEXED_PCPA73I: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA73I.DAT',
+  offsetInicial: 130,
+  passoFisico: 248,
+  tamanhoLogico: 246,
+};
+
+/** Consulta NRMP — PCPA73II */
+export const INDEXED_PCPA73II: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA73II.DAT',
+  offsetInicial: 130,
+  passoFisico: 106,
+  tamanhoLogico: 106,
+};
+
+/** Saldo planejamento — PCPA68I */
+export const INDEXED_PCPA68I: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA68I.DAT',
+  offsetInicial: 130,
+  passoFisico: 76,
+  tamanhoLogico: 71,
+};
+
 /** Processo produtivo — cabeçalho */
 export const INDEXED_PCPA70I: ConfigArquivoIndexed = {
   nomeArquivo: 'PCPA70I.DAT',

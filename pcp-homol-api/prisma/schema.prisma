@@ -83,15 +83,52 @@ model MateriaPrima {
   quantidade      Decimal?  @db.Decimal(11, 2)
   estoqueMin      Decimal?  @db.Decimal(8, 2)
   estoqueMax      Decimal?  @db.Decimal(8, 2)
+  /// PCPA22II — descrições longas
   descricaoCompl1 String?   @db.VarChar(60)
   descricaoCompl2 String?   @db.VarChar(75)
+  /// PCPA22II — preço de compra (PIC 9(07)V999)
+  precoCompra     Decimal?  @db.Decimal(10, 3)
+  /// PCPA22B — desenho do cliente na MP
   desenhoCliente  String?   @db.VarChar(15)
+  /// PCPA22B — descricoes extras + embalagens (JSON)
+  complementoExtra Json?
   movimentos      MovimentoMateriaPrima[]
   baixasOp        OrdemProducaoBaixaMateriaPrima[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@unique([classeLetra, classeNumero, itemCodigo])
+}
+
+/// Clientes — PCPA04I (PC1004) — referência para OP / comercial
+model Cliente {
+  id                 Int       @id @default(autoincrement())
+  codigo             Int       @unique
+  empresa            String    @db.VarChar(40)
+  sufixo             String?   @db.VarChar(20)
+  endereco           String?   @db.VarChar(40)
+  enderecoCobranca   String?   @db.VarChar(40)
+  cidade             String?   @db.VarChar(20)
+  estado             String?   @db.VarChar(2)
+  cep                String?   @db.VarChar(8)
+  bairro             String?   @db.VarChar(20)
+  telefone1          String?   @db.VarChar(9)
+  telefone2          String?   @db.VarChar(9)
+  ddd                Int?
+  cgc                String?   @db.VarChar(18)
+  inscricaoEstadual  String?   @db.VarChar(18)
+  ccm                String?   @db.VarChar(18)
+  contato1           String?   @db.VarChar(14)
+  contato2           String?   @db.VarChar(14)
+  fax                String?   @db.VarChar(9)
+  tipo               String?   @db.VarChar(1)
+  vendedorCodigo     Int?
+  enderecoEntrega    String?   @db.VarChar(40)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([empresa])
+  @@index([cgc])
 }
 
 // ---------------------------------------------------------------------------
@@ -132,9 +169,36 @@ model DesenhoCliente {
   updatedAt       DateTime  @updatedAt
 }
 
+/// Ferramentas / dispositivos — PCPA129I (PC1128 / PC1129)
+model Ferramenta {
+  id              Int       @id @default(autoincrement())
+  /// F=fábrica própria, D=dispositivo, S=terceiro, *=especial, etc.
+  fabrica         String    @db.VarChar(1)
+  numero          String    @db.VarChar(15)
+  matricula       Int
+  cavidade        Int?
+  sufixo          String?   @db.VarChar(10)
+  descricao       String?   @db.VarChar(30)
+  checkList       String?   @db.VarChar(10)
+  limiteAfiacao   Int?
+  acumGolpes      Int?
+  dataInicio      DateTime?
+  dataFim         DateTime?
+  plContNr        Int?
+  /// FR-TAB-20 — MPs vinculadas (até 20)
+  materiasPrimas  Json?
+  /// FR-TAB-16 — equipamentos / produtos relacionados
+  relacionamentos Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([fabrica, numero, matricula])
+  @@index([numero])
+}
+
 // ---------------------------------------------------------------------------
 // Processo produtivo (roteiro)
-// Fonte: PCPA70I, PCPA70XI (PC1070)
+// Fonte: PCPA70I, PCPA70XI, PCPA70C (PC1070)
 // ---------------------------------------------------------------------------
 
 model ProcessoProdutivo {
@@ -148,6 +212,8 @@ model ProcessoProdutivo {
   producaoHr      Int?
   /// MPs do processo (até 5 itens) — JSON [{classeLetra, classeNumero, itemCodigo, peso}]
   materiasPrimas  Json?
+  /// MPs complementares do PCPA70C (até +5)
+  materiasPrimasComplemento Json?
   operacoes       ProcessoOperacao[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
@@ -352,6 +418,124 @@ model ProgramacaoEntrega {
   @@unique([dataProgramacao, grupoCodigo, classificacaoCodigo, itemCodigo, plano, flag, desenhoCliente])
   @@index([dataProgramacao])
   @@index([grupoCodigo, classificacaoCodigo, itemCodigo])
+}
+
+/// Saldo mensal pai/filho — PCPA68I (PC1066 / PC1097)
+model SaldoPlanejamento {
+  id                  Int      @id @default(autoincrement())
+  ano                 Int
+  mes                 Int
+  grupoCodigo         Int
+  classificacaoCodigo Int
+  itemCodigo          Int
+  saldo               Decimal  @db.Decimal(14, 0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([ano, mes, grupoCodigo, classificacaoCodigo, itemCodigo])
+  @@index([ano, mes])
+}
+
+// ---------------------------------------------------------------------------
+// Compras / NRMP
+// Fonte: PCPA41I, PCPA41II, PCPA73I, PCPA73II (PC1034 / PC1041 / PC1073)
+// ---------------------------------------------------------------------------
+
+/// Pedido de compra de MP — cabeçalho PCPA41I
+model PedidoCompra {
+  id                   Int       @id @default(autoincrement())
+  codigo               Int       @unique
+  pedidoFornecedor     Int?
+  codFornecedor        Int?
+  nomeFornecedor       String?   @db.VarChar(15)
+  flag                 String?   @db.VarChar(1)
+  cancela              String?   @db.VarChar(3)
+  liberacao            String?   @db.VarChar(3)
+  localEntrega         String?   @db.VarChar(25)
+  dataPedido           DateTime?
+  dataLiberacao        DateTime?
+  dataRequisicao       DateTime?
+  dataEntrega          DateTime?
+  clienteCodigo        Int?
+  depto                String?   @db.VarChar(10)
+  setor                String?   @db.VarChar(10)
+  condEntrega          String?   @db.VarChar(10)
+  ordemProducaoCodigo  Int?
+  /// Itens do pedido (PD-TAB × 8) — JSON
+  itens                Json?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([ordemProducaoCodigo])
+  @@index([dataPedido])
+  @@index([codFornecedor])
+}
+
+/// Pedido de MP em aberto — PCPA41II (ligação MP × pedido × OP)
+model PedidoMpAberto {
+  id                  Int      @id @default(autoincrement())
+  classeLetra         String   @db.VarChar(1)
+  classeNumero        Int
+  itemCodigo          Int
+  pedidoCodigo        Int
+  indice              Int
+  quantidade          Decimal  @db.Decimal(10, 3)
+  /// A = aberto, B = baixado
+  flag                String?  @db.VarChar(1)
+  ordemProducaoCodigo Int?
+  materiaPrimaId      Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([classeLetra, classeNumero, itemCodigo, pedidoCodigo, indice])
+  @@index([pedidoCodigo])
+  @@index([flag])
+  @@index([ordemProducaoCodigo])
+}
+
+/// Nota de Recebimento de Matéria-Prima — PCPA73I
+model Nrmp {
+  id                 Int       @id @default(autoincrement())
+  letra              String    @db.VarChar(2)
+  numero             Int
+  letra2             String    @default("") @db.VarChar(2)
+  classeLetra        String?   @db.VarChar(1)
+  classeNumero       Int?
+  itemCodigo         Int?
+  dataEntrada        DateTime?
+  fornecedorCodigo   Int?
+  nota               Int?
+  serie              String?   @db.VarChar(2)
+  corrida            String?   @db.VarChar(10)
+  quantidade         Decimal?  @db.Decimal(10, 3)
+  valorUnitario      Decimal?  @db.Decimal(12, 3)
+  produtoCodigo      String?   @db.VarChar(10)
+  ofCodigo           String?   @db.VarChar(15)
+  materiaPrimaId     Int?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([letra, numero, letra2])
+  @@index([dataEntrada])
+  @@index([classeLetra, classeNumero, itemCodigo])
+}
+
+/// Índice/consulta NRMP — PCPA73II (arquivo legado quase vazio)
+model NrmpConsulta {
+  id           Int       @id @default(autoincrement())
+  letra        String    @db.VarChar(2)
+  numero       Int
+  letra2       String    @default("") @db.VarChar(2)
+  nota         Int?
+  tipo         String?   @db.VarChar(1)
+  data         DateTime?
+  pedidoCodigo Int?
+  quantidade   Decimal?  @db.Decimal(10, 3)
+  tipoNota     String?   @db.VarChar(3)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([letra, numero, letra2])
 }
 
 // ---------------------------------------------------------------------------

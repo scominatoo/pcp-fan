@@ -6,6 +6,10 @@
   "scripts": {
     "build": "tsc",
     "migrar:cadastros": "tsx src/migrar-cadastros.ts",
+    "migrar:apoio-op": "tsx src/migrar-apoio-op.ts",
+    "migrar:pacote-b": "tsx src/migrar-pacote-b.ts",
+    "migrar:pacote-c": "tsx src/migrar-pacote-c.ts",
+    "migrar:pacote-d": "tsx src/migrar-pacote-d.ts",
     "migrar:processo": "tsx src/migrar-processo.ts",
     "migrar:ops": "tsx src/migrar-ops.ts",
     "migrar:baixas": "tsx src/migrar-baixas.ts",

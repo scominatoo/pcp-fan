@@ -84,17 +84,18 @@ SELECT COUNT(*) FROM "MigracaoLog";
 
 ## Ordem de carga recomendada
 
-| Ordem | Arquivos | Motivo |
-|-------|----------|--------|
-| 1 | `PCPA19I`, `PCPA20I` | Grupos e classificações antes dos produtos |
-| 2 | `PCPA18I` | Produtos |
-| 3 | `PCPA22I`, `PCPA22II`, `PCPA22B` | Matéria-prima |
-| 4 | `PCPA64I`, `PCPA69I`, `PCPA106I` | Equipamentos, seções, desenhos |
-| 5 | `PCPA70I`, `PCPA70C`, `PCPA70XI` | Processo produtivo |
-| 6 | `PCPA129I` | Ferramentas |
-| 7 | `PCPA28I`, `PCPA28II`, `PCPA28E` | Ordens de produção |
-| 8 | `PCPA66I`, `PCPA68I` | Programação |
-| 9 | `PCPA76I`, `PCPA73I`, `PCPA41I` | Movimentos MP e compras |
+| Ordem | Arquivos | Motivo | Status |
+|-------|----------|--------|--------|
+| 1 | `PCPA19I`, `PCPA20I` | Grupos e classificações antes dos produtos | ✅ |
+| 2 | `PCPA18I` | Produtos | ✅ |
+| 3 | `PCPA22I`, `PCPA22II`, `PCPA22B` | Matéria-prima + complementos | ✅ |
+| 4 | `PCPA64I`, `PCPA69I`, `PCPA106I` | Equipamentos, seções, desenhos (Pacote A) | ✅ |
+| 5 | `PCPA70I`, `PCPA70C`, `PCPA70XI` | Processo produtivo | ✅ |
+| 6 | `PCPA129I` | Ferramentas (Pacote B) | ✅ |
+| 7 | `PCPA28I`, `PCPA28II`, `PCPA28E` | Ordens de produção | ✅ |
+| 8 | `PCPA66I`, `PCPA68I` | Programação + saldo | ✅ |
+| 9 | `PCPA76I`, `PCPA73I`/`73II`, `PCPA41I`/`41II` | Movimentos, NRMP, compras (Pacote D) | ✅ |
+| — | `PCPA04I` | Clientes (Pacote C) | ✅ |
 
 ---
 
@@ -135,15 +136,20 @@ Validar: `npm run validar:indexed -- PCPA18I` (também `PCPA22I`, `PCPA28E`)
 
 ---
 
-## Scripts previstos (a criar)
+## Scripts de migração
 
 | Script npm | Arquivos | Status |
 |------------|----------|--------|
 | `migrar:cadastros` | PCPA19I, PCPA20I, PCPA18I, PCPA22I | ✅ |
+| `migrar:apoio-op` | PCPA106I, PCPA69I, PCPA64I (Pacote A) | ✅ |
+| `migrar:processo` | PCPA70I, PCPA70XI | ✅ |
+| `migrar:pacote-b` | PCPA70C, PCPA129I | ✅ |
 | `migrar:ops` | PCPA28I, PCPA28II, PCPA28E | ✅ (125.244 operações) |
+| `migrar:baixas` | PCPA71I, PCPA132I | ✅ |
+| `migrar:baixas-mp` | PCPA76I, PCPA109I | ✅ |
 | `migrar:programacao` | PCPA66I | ✅ |
-| `migrar:processo` | PCPA70I, PCPA70XI | ⏳ |
-| `migrar:movimentos` | PCPA76I, PCPA73I, PCPA41I | ⏳ |
+| `migrar:pacote-c` | PCPA22II, PCPA22B, PCPA04I | ✅ |
+| `migrar:pacote-d` | PCPA41I, PCPA41II, PCPA73I, PCPA73II, PCPA68I | ✅ |
 
 ---
 
