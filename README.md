@@ -13,32 +13,21 @@ pcp-fan/
 └── scripts/              # Helpers locais
 ```
 
-## Dependências (importante)
+## Login
 
-Este projeto é **Node.js**, não Python. Não há `requirements.txt`.
+Único usuário: **admin**. Configure no `.env` da API:
 
-As dependências estão em:
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD_HASH` (bcrypt — preferível) ou `ADMIN_PASSWORD` (só homologação)
+- `JWT_SECRET`
 
-| Pasta | Arquivos |
-|-------|----------|
-| `pcp-homol-api/` | `package.json` + `package-lock.json` |
-| `pcp-homol-web/` | `package.json` + `package-lock.json` |
-| `pcp-homol-migracao/` | `package.json` + `package-lock.json` |
+## Dependências
 
-No servidor, após o clone:
+Projeto **Node.js** (`package.json` + `package-lock.json`). Não há `requirements.txt`.
 
 ```bash
 cd pcp-homol-api && npm ci
 cd ../pcp-homol-web && npm ci
-cd ../pcp-homol-migracao && npm ci   # só se for migrar dados
-```
-
-Copie também os exemplos de ambiente (nunca versionamos `.env` com segredos):
-
-```bash
-cp pcp-homol-api/.env.example pcp-homol-api/.env
-cp pcp-homol-web/.env.example pcp-homol-web/.env
-# edite DATABASE_URL, JWT_SECRET, CORS, etc. para produção
 ```
 
 ## Clonar
@@ -48,26 +37,20 @@ git clone git@github.com:scominatoo/pcp-fan.git
 cd pcp-fan
 ```
 
-## Subir o ambiente
+## Desenvolvimento
 
 ```bash
-# 1. Banco (Docker) — na pasta da API
-cd pcp-homol-api
-docker compose up -d
-cp .env.example .env   # se ainda não existir
-npm ci
-npx prisma migrate deploy
-npm run build
-npm run start:prod
+# Banco
+cd pcp-homol-api && docker compose up -d
+cp .env.example .env   # preencha ADMIN_PASSWORD_HASH e JWT_SECRET
+npm ci && npm run start:dev
 
-# 2. Frontend
+# Frontend → http://localhost:5176
 cd ../pcp-homol-web
 cp .env.example .env
-npm ci
-npm run build
-npm run preview   # ou sirva a pasta dist/ com nginx
+npm ci && npm run dev
 ```
 
 ## Documentação
 
-Comece por [pcp-homol-docs/docs/README.md](pcp-homol-docs/docs/README.md).
+[pcp-homol-docs/docs/README.md](pcp-homol-docs/docs/README.md)

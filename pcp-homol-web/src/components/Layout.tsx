@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 const NAV_GROUPS = [
   {
@@ -26,6 +27,14 @@ const NAV_GROUPS = [
 ] as const;
 
 export function Layout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function sair() {
+    logout();
+    navigate('/login', { replace: true });
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -62,11 +71,18 @@ export function Layout() {
         </nav>
 
         <footer className="sidebar-footer">
-          <span className="sidebar-footer-label">Ambiente</span>
+          <div className="sidebar-user">
+            <span className="sidebar-footer-label">Logado como</span>
+            <strong>{user?.username ?? 'admin'}</strong>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-sidebar-logout"
+            onClick={sair}
+          >
+            Sair
+          </button>
           <span className="badge badge-env">Homologação</span>
-          <p className="sidebar-note">
-            Dados migrados do legado COBOL — não use em produção.
-          </p>
         </footer>
       </aside>
 

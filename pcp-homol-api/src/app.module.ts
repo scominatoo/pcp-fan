@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { EquipamentosModule } from './equipamentos/equipamentos.module';
 import { HealthModule } from './health/health.module';
 import { MateriaPrimaModule } from './materia-prima/materia-prima.module';
@@ -18,6 +19,7 @@ import { SecoesModule } from './secoes/secoes.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    AuthModule,
     PrismaModule,
     HealthModule,
     ProdutosModule,

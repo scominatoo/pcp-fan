@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5175,
+    // 5175 às vezes fica presa no preview antigo do Cursor; use 5176
+    port: 5176,
     strictPort: false,
     proxy: {
       '/api': {

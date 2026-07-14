@@ -1,6 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './auth/AuthContext';
 import { Layout } from './components/Layout';
+import { RequireAuth } from './components/RequireAuth';
 import { HomePage } from './pages/HomePage';
+import { LoginPage } from './pages/LoginPage';
 import { MateriaPrimaFormPage } from './pages/materia-prima/MateriaPrimaFormPage';
 import { MateriaPrimaPage } from './pages/materia-prima/MateriaPrimaPage';
 import { OrdemProducaoDetailPage } from './pages/ordens-producao/OrdemProducaoDetailPage';
@@ -17,29 +20,41 @@ import { ProdutosPage } from './pages/produtos/ProdutosPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<HomePage />} />
-          <Route path="produtos" element={<ProdutosPage />} />
-          <Route path="produtos/:id" element={<ProdutoFormPage />} />
-          <Route path="materia-prima" element={<MateriaPrimaPage />} />
-          <Route path="materia-prima/:id" element={<MateriaPrimaFormPage />} />
-          <Route path="ordens-producao" element={<OrdensProducaoPage />} />
-          <Route path="ordens-producao/novo" element={<OrdemProducaoFormPage />} />
-          <Route
-            path="ordens-producao/:id/emissao"
-            element={<OrdemProducaoEmissaoPage />}
-          />
-          <Route path="ordens-producao/:id" element={<OrdemProducaoDetailPage />} />
-          <Route path="programacao" element={<ProgramacaoPage />} />
-          <Route path="programacao/novo" element={<ProgramacaoFormPage />} />
-          <Route path="programacao/:id" element={<ProgramacaoDetailPage />} />
-          <Route path="relatorios" element={<RelatoriosHubPage />} />
-          <Route path="relatorios/:tipo" element={<RelatorioPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+
+          <Route element={<RequireAuth />}>
+            <Route element={<Layout />}>
+              <Route index element={<HomePage />} />
+              <Route path="produtos" element={<ProdutosPage />} />
+              <Route path="produtos/:id" element={<ProdutoFormPage />} />
+              <Route path="materia-prima" element={<MateriaPrimaPage />} />
+              <Route path="materia-prima/:id" element={<MateriaPrimaFormPage />} />
+              <Route path="ordens-producao" element={<OrdensProducaoPage />} />
+              <Route
+                path="ordens-producao/novo"
+                element={<OrdemProducaoFormPage />}
+              />
+              <Route
+                path="ordens-producao/:id/emissao"
+                element={<OrdemProducaoEmissaoPage />}
+              />
+              <Route
+                path="ordens-producao/:id"
+                element={<OrdemProducaoDetailPage />}
+              />
+              <Route path="programacao" element={<ProgramacaoPage />} />
+              <Route path="programacao/novo" element={<ProgramacaoFormPage />} />
+              <Route path="programacao/:id" element={<ProgramacaoDetailPage />} />
+              <Route path="relatorios" element={<RelatoriosHubPage />} />
+              <Route path="relatorios/:tipo" element={<RelatorioPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

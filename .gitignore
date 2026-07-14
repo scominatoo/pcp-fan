@@ -11,3 +11,5 @@ coverage/
 .tools/
 .agents/
 skills-lock.json
+backups/
+*.dump

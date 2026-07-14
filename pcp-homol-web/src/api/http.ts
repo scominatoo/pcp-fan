@@ -12,18 +12,40 @@ export class ApiError extends Error {
   }
 }
 
+function getToken(): string | null {
+  try {
+    return localStorage.getItem('pcp_access_token');
+  } catch {
+    return null;
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE}${path}`;
+  const token = getToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string> | undefined),
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const res = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
     ...options,
+    headers,
   });
+
+  if (res.status === 401 && !path.includes('/auth/login')) {
+    localStorage.removeItem('pcp_access_token');
+    localStorage.removeItem('pcp_user');
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+  }
 
   if (!res.ok) {
     let message = `Erro ${res.status}`;

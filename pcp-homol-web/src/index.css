@@ -1142,6 +1142,142 @@ th {
    Impressão
    ========================================================================== */
 
+.sidebar-user {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.55rem;
+}
+
+.sidebar-user strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.btn-sidebar-logout {
+  width: 100%;
+  margin-bottom: 0.65rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-inverse);
+}
+
+.btn-sidebar-logout:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   Login
+   ========================================================================== */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: var(--steel-900);
+  background-image:
+    linear-gradient(135deg, rgba(196, 106, 43, 0.18), transparent 45%),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: auto, 28px 28px, 28px 28px;
+}
+
+.login-panel {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface-raised);
+  border: 1px solid var(--steel-200);
+  border-left: var(--forge-stripe) solid var(--forge-500);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1.65rem 1.35rem;
+  box-shadow: var(--shadow-hover);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--steel-200);
+}
+
+.login-brand h1 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.login-brand p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.login-form h2 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.login-lead {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.15rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.login-form input {
+  font: inherit;
+  font-size: 0.92rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--steel-200);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: var(--forge-500);
+  box-shadow: 0 0 0 3px var(--forge-soft);
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+}
+
+.login-footer {
+  margin-top: 1.15rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
 @media print {
   body {
     background: #fff;
