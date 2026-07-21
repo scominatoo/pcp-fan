@@ -78,6 +78,62 @@ export class OrdensProducaoService {
     return { codigo: (agg._max.codigo ?? 0) + 1 };
   }
 
+  /**
+   * Autocomplete — busca desenhos do cliente (PCPA106I → DesenhoCliente).
+   * Também indica se já existe roteiro (PC1070) para aquele código.
+   */
+  async buscarDesenhos(q: string, limit = 15) {
+    const term = q.trim();
+    if (term.length < 1) {
+      return [];
+    }
+
+    const take = Math.min(Math.max(limit, 1), 30);
+
+    // Prioriza códigos que COMEÇAM com o termo (ex.: digitar 0828 → 0828-A)
+    const desenhos = await this.prisma.desenhoCliente.findMany({
+      where: {
+        OR: [
+          { desenhoCliente: { startsWith: term, mode: 'insensitive' } },
+          { desenhoCliente: { contains: term, mode: 'insensitive' } },
+          { descricao: { contains: term, mode: 'insensitive' } },
+        ],
+      },
+      take,
+      orderBy: { desenhoCliente: 'asc' },
+    });
+
+    if (desenhos.length === 0) {
+      return [];
+    }
+
+    // Verifica quais desenhos já têm processo/roteiro no banco
+    const codigos = desenhos.map((d) => d.desenhoCliente.trim());
+    const processos = await this.prisma.processoProdutivo.findMany({
+      where: {
+        OR: codigos.flatMap((c) => [
+          { produtoCodigo: c },
+          { produtoCodigo: { startsWith: c } },
+        ]),
+      },
+      select: { produtoCodigo: true },
+    });
+    const processosTrim = processos.map((p) => p.produtoCodigo.trim());
+
+    return desenhos.map((d) => {
+      const codigo = d.desenhoCliente.trim();
+      const temRoteiro = processosTrim.some(
+        (pc) => pc === codigo || pc.startsWith(codigo) || codigo.startsWith(pc),
+      );
+      return {
+        desenhoCliente: codigo,
+        descricao: d.descricao,
+        unidade: d.unidade,
+        temRoteiro,
+      };
+    });
+  }
+
   /** Dados para montar o formulário de nova OP (produto + roteiro). */
   async prepararCriacao(produtoCodigo: string) {
     // Remove espaços das pontas — no legado o desenho às vezes vem com padding.
@@ -90,27 +146,10 @@ export class OrdensProducaoService {
     const produto = await this.resolverProduto(limpo);
 
     // 2) Chaves possíveis do processo = texto digitado + desenhos do produto.
-    const chavesProcesso = [
-      limpo,
-      produto?.desenhoCliente?.trim(),
-      produto?.desenhoSparta?.replace(/\./g, '').trim(),
-    ].filter((v): v is string => Boolean(v && v.length > 0));
+    const chavesProcesso = this.montarChavesProcesso(limpo, produto);
 
     // Match exato OU começa com o código (cobre campos com espaços do COBOL).
-    const processo = await this.prisma.processoProdutivo.findFirst({
-      where: {
-        OR: [
-          { produtoCodigo: { in: [...new Set(chavesProcesso)] } },
-          ...[...new Set(chavesProcesso)].map((chave) => ({
-            produtoCodigo: { startsWith: chave },
-          })),
-        ],
-      },
-      include: {
-        operacoes: { orderBy: { numeroOperacao: 'asc' } },
-        produto: true,
-      },
-    });
+    const processo = await this.resolverProcessoPorChaves(chavesProcesso);
 
     // Sem produto E sem processo → mensagem clara apontando o menu Processos.
     if (!produto && !processo) {
@@ -178,18 +217,10 @@ export class OrdensProducaoService {
       throw new BadRequestException('Desenho/produto não cadastrado');
     }
 
-    const chavesProcesso = [
-      produtoCodigo,
-      produto.desenhoCliente?.trim(),
-      produto.desenhoSparta?.replace(/\./g, '').trim(),
-    ].filter((v): v is string => Boolean(v && v.length > 0));
-
-    const processo = await this.prisma.processoProdutivo.findFirst({
-      where: { produtoCodigo: { in: [...new Set(chavesProcesso)] } },
-      include: {
-        operacoes: { orderBy: { numeroOperacao: 'asc' } },
-      },
-    });
+    // Mesma lógica do prepararCriacao — antes o create só fazia match exato
+    // e falhava quando o COBOL gravou o código com espaços à direita.
+    const chavesProcesso = this.montarChavesProcesso(produtoCodigo, produto);
+    const processo = await this.resolverProcessoPorChaves(chavesProcesso);
 
     if (!processo || processo.operacoes.length === 0) {
       throw new BadRequestException(
@@ -955,6 +986,46 @@ export class OrdensProducaoService {
         ],
       },
       include: { grupo: true, classificacao: true },
+    });
+  }
+
+  /** Chaves usadas para achar o processo (digitado + desenhos do produto). */
+  private montarChavesProcesso(
+    digitado: string,
+    produto: {
+      desenhoCliente?: string | null;
+      desenhoSparta?: string | null;
+    } | null,
+  ): string[] {
+    return [
+      digitado.trim(),
+      produto?.desenhoCliente?.trim(),
+      produto?.desenhoSparta?.replace(/\./g, '').trim(),
+    ].filter((v): v is string => Boolean(v && v.length > 0));
+  }
+
+  /**
+   * Localiza o processo pelo código do desenho.
+   * Aceita match exato OU "começa com" (padding COBOL em produtoCodigo).
+   */
+  private async resolverProcessoPorChaves(chaves: string[]) {
+    const unicas = [...new Set(chaves)];
+    if (unicas.length === 0) {
+      return null;
+    }
+    return this.prisma.processoProdutivo.findFirst({
+      where: {
+        OR: [
+          { produtoCodigo: { in: unicas } },
+          ...unicas.map((chave) => ({
+            produtoCodigo: { startsWith: chave },
+          })),
+        ],
+      },
+      include: {
+        operacoes: { orderBy: { numeroOperacao: 'asc' as const } },
+        produto: true,
+      },
     });
   }
 }

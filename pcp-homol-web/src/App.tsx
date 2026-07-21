@@ -19,6 +19,8 @@ import { ProcessoDetailPage } from './pages/processos/ProcessoDetailPage';
 import { ProcessosPage } from './pages/processos/ProcessosPage';
 import { ProdutoFormPage } from './pages/produtos/ProdutoFormPage';
 import { ProdutosPage } from './pages/produtos/ProdutosPage';
+import { ClienteDetailPage } from './pages/clientes/ClienteDetailPage';
+import { ClientesPage } from './pages/clientes/ClientesPage';
 
 export default function App() {
   return (
@@ -36,6 +38,8 @@ export default function App() {
               <Route path="processos/:id" element={<ProcessoDetailPage />} />
               <Route path="materia-prima" element={<MateriaPrimaPage />} />
               <Route path="materia-prima/:id" element={<MateriaPrimaFormPage />} />
+              <Route path="clientes" element={<ClientesPage />} />
+              <Route path="clientes/:id" element={<ClienteDetailPage />} />
               <Route path="ordens-producao" element={<OrdensProducaoPage />} />
               <Route
                 path="ordens-producao/novo"

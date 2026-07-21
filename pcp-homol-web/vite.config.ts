@@ -4,13 +4,14 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    // 3001/5176 às vezes ficam presas no proxy morto do Cursor
     host: '127.0.0.1',
-    port: 5174,
+    // Porta obrigatória do frontend nesta homologação
+    port: 5175,
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:3002',
+        // Deve bater com BACKEND_PORT do pcp-homol-api/.env (obrigatório: 3000)
+        target: 'http://127.0.0.1:3000',
         changeOrigin: true,
       },
     },

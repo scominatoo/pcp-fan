@@ -18,6 +18,7 @@ const TIPOS_OP = ['PRO', 'PIL', 'TRY', 'PRD'] as const;
 export class CreateOrdemProducaoDto {
   /** Se omitido, usa próximo código disponível (último + 1). */
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   codigo?: number;
@@ -27,6 +28,7 @@ export class CreateOrdemProducaoDto {
   @MaxLength(15)
   produtoCodigo!: string;
 
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(9999999)

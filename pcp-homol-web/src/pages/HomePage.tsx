@@ -40,6 +40,13 @@ const MODULOS = [
     unit: 'itens',
   },
   {
+    to: '/clientes',
+    titulo: 'Clientes',
+    descricao: 'Empresas do legado PC1004 — busca com autocomplete.',
+    stat: '813',
+    unit: 'clientes',
+  },
+  {
     to: '/relatorios',
     titulo: 'Relatórios',
     descricao: 'OP aberta, setor, MP crítico e sintéticos.',
@@ -87,8 +94,8 @@ export function HomePage() {
 
       {isError && (
         <div className="alert alert-error">
-          API ou banco offline. Inicie o Docker, a API (porta 3001) e o frontend
-          conforme o manual do usuário.
+          API ou banco offline. Inicie o Docker, a API (porta 3000) e o frontend
+          (porta 5175) conforme o manual do usuário.
         </div>
       )}
 

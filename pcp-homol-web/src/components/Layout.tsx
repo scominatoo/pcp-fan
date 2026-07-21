@@ -12,6 +12,7 @@ const NAV_GROUPS = [
       { to: '/produtos', label: 'Produtos' },
       { to: '/processos', label: 'Processos' },
       { to: '/materia-prima', label: 'Matéria-prima' },
+      { to: '/clientes', label: 'Clientes' },
     ],
   },
   {

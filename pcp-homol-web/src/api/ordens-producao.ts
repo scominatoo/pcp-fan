@@ -109,6 +109,22 @@ export function prepararCriacaoOp(produtoCodigo: string) {
   );
 }
 
+/** Sugestão do autocomplete de desenho do cliente (PCPA106I). */
+export type DesenhoClienteSugestao = {
+  desenhoCliente: string;
+  descricao: string | null;
+  unidade: string | null;
+  /** true se já existe roteiro (PC1070) para esse desenho */
+  temRoteiro: boolean;
+};
+
+export function buscarDesenhosCliente(q: string, limit = 15) {
+  const qs = new URLSearchParams({ q, limit: String(limit) });
+  return apiFetch<DesenhoClienteSugestao[]>(
+    `/api/ordens-producao/buscar-desenhos?${qs}`,
+  );
+}
+
 export type CriarOpPayload = {
   codigo?: number;
   produtoCodigo: string;

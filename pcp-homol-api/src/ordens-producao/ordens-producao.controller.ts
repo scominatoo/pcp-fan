@@ -39,6 +39,19 @@ export class OrdensProducaoController {
     return this.service.prepararCriacao(produtoCodigo ?? '');
   }
 
+  /**
+   * Autocomplete do campo "Desenho do cliente" na inclusão da OP.
+   * Fonte: tabela DesenhoCliente (legado PCPA106I).
+   */
+  @Get('buscar-desenhos')
+  buscarDesenhos(
+    @Query('q') q?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const lim = limit ? Number(limit) : 15;
+    return this.service.buscarDesenhos(q ?? '', Number.isFinite(lim) ? lim : 15);
+  }
+
   @Get('codigo/:codigo')
   findByCodigo(@Param('codigo', ParseIntPipe) codigo: number) {
     return this.service.findByCodigo(codigo);

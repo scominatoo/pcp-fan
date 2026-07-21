@@ -927,10 +927,78 @@ button.link {
 .lookup-row {
   display: flex;
   gap: 0.45rem;
+  align-items: flex-start;
 }
 
 .lookup-row input {
   flex: 1;
+}
+
+.search-form .autocomplete {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Autocomplete (combobox) — desenho / cliente */
+.autocomplete {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.autocomplete input {
+  width: 100%;
+}
+
+.autocomplete-list {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--surface-raised);
+  border: 1px solid var(--steel-200);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.autocomplete-item {
+  display: grid;
+  grid-template-columns: minmax(72px, auto) 1fr auto;
+  gap: 0.55rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.is-active {
+  background: var(--forge-soft);
+}
+
+.autocomplete-desc {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.autocomplete-empty {
+  padding: 0.55rem 0.7rem;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
 }
 
 .form-row {
