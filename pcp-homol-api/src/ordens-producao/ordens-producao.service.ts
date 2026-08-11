@@ -393,11 +393,25 @@ export class OrdensProducaoService {
       };
     });
 
+    const itensMp = [
+      ...(await this.resolverMpsProcesso(processo?.materiasPrimas)),
+      ...(await this.resolverMpsProcesso(processo?.materiasPrimasComplemento)),
+    ];
+
+    const requisicoes = await this.obterOuCriarRequisicoes(op.id, itensMp);
+
     return {
       op: serializeOrdemProducao(op, true),
       tipoLabel: labelTipoOp(op.tipo),
-      materiasPrimas: processo?.materiasPrimas ?? null,
+      materiasPrimas: itensMp.map(({ materiaPrimaId, codigo, descricao, unidade, peso }) => ({
+        materiaPrimaId,
+        codigo,
+        descricao,
+        unidade,
+        peso,
+      })),
       operacoes,
+      requisicoes,
       emitidoEm: new Date().toISOString(),
     };
   }
@@ -794,7 +808,11 @@ export class OrdensProducaoService {
       materiaPrimaId: number | null;
       codigo: string;
       descricao: string | null;
+      unidade: string | null;
       peso: number | null;
+      classeLetra: string;
+      classeNumero: number;
+      itemCodigo: number;
     }> = [];
 
     for (const item of materiasPrimas) {
@@ -815,11 +833,129 @@ export class OrdensProducaoService {
           ? formatarCodigoMateriaPrima(mp)
           : `${letra}${String(numero).padStart(2, '0')}${String(itemCodigo).padStart(5, '0')}`,
         descricao: mp?.descricao ?? null,
+        unidade: mp?.unidade ?? null,
         peso: raw.peso != null ? Number(raw.peso) : null,
+        classeLetra: letra,
+        classeNumero: numero,
+        itemCodigo,
       });
     }
 
     return sugestoes;
+  }
+
+  /**
+   * Busca/cria as requisições de matéria-prima da OP (paridade IMPRIME-REQUISICAO).
+   * Efeito colateral intencional: a 1ª emissão grava o número sequencial de cada
+   * item; emissões seguintes reaproveitam o mesmo número (mesmo padrão do legado,
+   * que já grava RELATO/ABERTO.DAT durante a emissão do PC1041).
+   */
+  private async obterOuCriarRequisicoes(
+    ordemProducaoId: number,
+    itensMp: Array<{
+      materiaPrimaId: number | null;
+      codigo: string;
+      descricao: string | null;
+      unidade: string | null;
+      peso: number | null;
+      classeLetra: string;
+      classeNumero: number;
+      itemCodigo: number;
+    }>,
+  ) {
+    const resultado: Array<{
+      itemOrdem: number;
+      numeroFormatado: string;
+      codigo: string;
+      descricao: string | null;
+      unidade: string | null;
+      quantidade: number | null;
+    }> = [];
+
+    let itemOrdem = 0;
+    for (const mp of itensMp) {
+      itemOrdem += 1;
+
+      let requisicao = await this.prisma.requisicaoMaterial.findUnique({
+        where: {
+          ordemProducaoId_classeLetra_classeNumero_itemCodigo: {
+            ordemProducaoId,
+            classeLetra: mp.classeLetra,
+            classeNumero: mp.classeNumero,
+            itemCodigo: mp.itemCodigo,
+          },
+        },
+      });
+
+      if (!requisicao) {
+        requisicao = await this.criarRequisicaoComRetry(
+          ordemProducaoId,
+          itemOrdem,
+          mp,
+        );
+      }
+
+      resultado.push({
+        itemOrdem: requisicao.itemOrdem,
+        numeroFormatado: `${String(requisicao.numero).padStart(5, '0')}/${String(requisicao.ano).padStart(2, '0')}`,
+        codigo: mp.codigo,
+        descricao: mp.descricao,
+        unidade: mp.unidade,
+        quantidade: mp.peso,
+      });
+    }
+
+    return resultado;
+  }
+
+  private async criarRequisicaoComRetry(
+    ordemProducaoId: number,
+    itemOrdem: number,
+    mp: {
+      materiaPrimaId: number | null;
+      peso: number | null;
+      classeLetra: string;
+      classeNumero: number;
+      itemCodigo: number;
+    },
+    tentativas = 5,
+  ) {
+    const ano = new Date().getFullYear() % 100;
+
+    for (let i = 0; i < tentativas; i++) {
+      const ultima = await this.prisma.requisicaoMaterial.findFirst({
+        orderBy: { numero: 'desc' },
+      });
+      const proximoNumero = (ultima?.numero ?? 0) + 1;
+
+      try {
+        return await this.prisma.requisicaoMaterial.create({
+          data: {
+            numero: proximoNumero,
+            ano,
+            itemOrdem,
+            ordemProducaoId,
+            classeLetra: mp.classeLetra,
+            classeNumero: mp.classeNumero,
+            itemCodigo: mp.itemCodigo,
+            materiaPrimaId: mp.materiaPrimaId,
+            quantidade: mp.peso,
+          },
+        });
+      } catch (e) {
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === 'P2002'
+        ) {
+          continue;
+        }
+        throw e;
+      }
+    }
+
+    throw new BadRequestException(
+      'Não foi possível gerar o número da requisição de material',
+    );
   }
 
   private montarTemposOperacoes(

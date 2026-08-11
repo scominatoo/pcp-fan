@@ -9,7 +9,13 @@ coverage/
 .vscode/
 *.tsbuildinfo
 .tools/
-.agents/
-skills-lock.json
+
+# Prisma
+backend/prisma/migrations/**/migration_lock.toml
+
+# Dados legados (não versionar cópias locais de DAT)
+dados-legado/*.DAT
+dados-legado/*.IDX
+
+# Dumps de banco (grandes, podem conter dados de clientes) — manter só localmente
 backups/
-*.dump

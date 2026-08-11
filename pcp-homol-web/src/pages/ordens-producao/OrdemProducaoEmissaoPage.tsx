@@ -21,7 +21,8 @@ export function OrdemProducaoEmissaoPage() {
   if (isError) return <p className="erro">{(error as Error).message}</p>;
   if (!data) return null;
 
-  const { op, tipoLabel, operacoes } = data;
+  const { op, tipoLabel, operacoes, materiasPrimas, requisicoes } = data;
+  const hoje = new Date().toLocaleDateString('pt-BR');
 
   return (
     <div className="emissao-wrap">
@@ -88,6 +89,34 @@ export function OrdemProducaoEmissaoPage() {
           </div>
         </section>
 
+        {materiasPrimas.length > 0 && (
+          <section className="emissao-bloco">
+            <h2>Matérias-primas</h2>
+            <table className="emissao-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Descrição</th>
+                  <th>Peso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {materiasPrimas.map((mp) => (
+                  <tr key={mp.codigo}>
+                    <td>{mp.codigo}</td>
+                    <td>{mp.descricao ?? '—'}</td>
+                    <td>
+                      {mp.peso != null
+                        ? `${mp.peso.toLocaleString('pt-BR')}${mp.unidade ? ` ${mp.unidade}` : ''}`
+                        : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+
         <section className="emissao-bloco">
           <h2>Roteiro de produção</h2>
           <table className="emissao-table">
@@ -101,6 +130,7 @@ export function OrdemProducaoEmissaoPage() {
                 <th>Equipamento</th>
                 <th>Ferramenta</th>
                 <th>Encerramento</th>
+                <th>Aprovação</th>
               </tr>
             </thead>
             <tbody>
@@ -119,6 +149,15 @@ export function OrdemProducaoEmissaoPage() {
                   <td>{o.equipamento}</td>
                   <td>{o.ferramenta ?? '—'}</td>
                   <td>{formatarData(o.dataEncerramento)}</td>
+                  <td>
+                    <div className="emissao-selo">
+                      <span>Início:</span>
+                      <span>Término:</span>
+                      <span>Qtde:</span>
+                      <span>Liberado por:</span>
+                      <span>Data: ___/___/___</span>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -132,6 +171,53 @@ export function OrdemProducaoEmissaoPage() {
             Homologação
           </small>
         </footer>
+
+        {requisicoes.map((r) => (
+          <section key={r.numeroFormatado} className="emissao-requisicao">
+            <header className="emissao-requisicao-header">
+              <div>
+                <strong>INDUSTRIA METALURGICA FANANDRI LTDA</strong>
+                <div>CONTROLE PRODUÇÃO</div>
+              </div>
+              <div>DATA: {hoje}</div>
+            </header>
+            <div className="emissao-requisicao-titulo">
+              <div>
+                REQUISIÇÃO DE MATERIAL DE ESTOQUE No.{' '}
+                <span className="mono">{r.numeroFormatado}</span>
+              </div>
+              <div>
+                OP No.: <span className="mono">{op.codigo}</span>
+              </div>
+            </div>
+            <table className="emissao-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Código</th>
+                  <th>Descrição</th>
+                  <th>Un.</th>
+                  <th>Quantidade</th>
+                  <th>Prazo nec.</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{String(r.itemOrdem).padStart(2, '0')}</td>
+                  <td>{r.codigo}</td>
+                  <td>{r.descricao ?? '—'}</td>
+                  <td>{r.unidade ?? '—'}</td>
+                  <td>
+                    {r.quantidade != null
+                      ? r.quantidade.toLocaleString('pt-BR')
+                      : '—'}
+                  </td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        ))}
       </article>
     </div>
   );

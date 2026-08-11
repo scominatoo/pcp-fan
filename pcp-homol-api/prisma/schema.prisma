@@ -94,10 +94,32 @@ model MateriaPrima {
   complementoExtra Json?
   movimentos      MovimentoMateriaPrima[]
   baixasOp        OrdemProducaoBaixaMateriaPrima[]
+  requisicoes     RequisicaoMaterial[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@unique([classeLetra, classeNumero, itemCodigo])
+}
+
+/// Requisição de matéria-prima impressa na emissão da OP (folha separada por item)
+/// Fonte legada: IMPRIME-REQUISICAO (PC1041)
+model RequisicaoMaterial {
+  id              Int       @id @default(autoincrement())
+  numero          Int
+  ano             Int
+  itemOrdem       Int
+  ordemProducaoId Int
+  ordemProducao   OrdemProducao @relation(fields: [ordemProducaoId], references: [id], onDelete: Cascade)
+  classeLetra     String    @db.VarChar(1)
+  classeNumero    Int
+  itemCodigo      Int
+  materiaPrimaId  Int?
+  materiaPrima    MateriaPrima? @relation(fields: [materiaPrimaId], references: [id])
+  quantidade      Decimal?  @db.Decimal(11, 2)
+  createdAt       DateTime  @default(now())
+
+  @@unique([numero])
+  @@unique([ordemProducaoId, classeLetra, classeNumero, itemCodigo])
 }
 
 /// Clientes — PCPA04I (PC1004) — referência para OP / comercial
@@ -266,6 +288,7 @@ model OrdemProducao {
   baixasOperacao    OrdemProducaoBaixaOperacao[]
   baixasMateriaPrima OrdemProducaoBaixaMateriaPrima[]
   movimentosMp       MovimentoMateriaPrima[]
+  requisicoesMaterial RequisicaoMaterial[]
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

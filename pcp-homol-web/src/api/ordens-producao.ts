@@ -54,7 +54,13 @@ export type PrepararCriacaoOp = {
 export type EmissaoOp = {
   op: OrdemProducao;
   tipoLabel: string;
-  materiasPrimas: unknown;
+  materiasPrimas: Array<{
+    materiaPrimaId: number | null;
+    codigo: string;
+    descricao: string | null;
+    unidade: string | null;
+    peso: number | null;
+  }>;
   operacoes: Array<{
     numeroOperacao: number;
     descricao: string | null;
@@ -68,6 +74,14 @@ export type EmissaoOp = {
     equipamento: string;
     ferramenta: string | null;
     dataEncerramento: string | null;
+  }>;
+  requisicoes: Array<{
+    itemOrdem: number;
+    numeroFormatado: string;
+    codigo: string;
+    descricao: string | null;
+    unidade: string | null;
+    quantidade: number | null;
   }>;
   emitidoEm: string;
 };
