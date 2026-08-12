@@ -1,0 +1,21 @@
+[Unit]
+Description=PCP Homologacao — PostgreSQL (pcp_homol)
+Documentation=file:///home/pcp/pcp-fan/README.md
+After=network.target
+
+[Service]
+Type=simple
+User=pcp
+Group=pcp
+Environment=PATH=/home/pcp/micromamba/envs/pcp-pg/bin:/usr/bin:/bin
+Environment=PGDATA=/home/pcp/pcp-fan/.pgdata
+WorkingDirectory=/home/pcp/pcp-fan
+ExecStart=/home/pcp/micromamba/envs/pcp-pg/bin/postgres -D /home/pcp/pcp-fan/.pgdata
+KillMode=mixed
+KillSignal=SIGINT
+TimeoutStopSec=60
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

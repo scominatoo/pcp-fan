@@ -1,0 +1,23 @@
+[Unit]
+Description=PCP Homologacao — Frontend Vite (porta 5175)
+Documentation=file:///home/pcp/pcp-fan/README.md
+After=network.target pcp-api.service
+Wants=pcp-api.service
+
+[Service]
+Type=simple
+User=pcp
+Group=pcp
+WorkingDirectory=/home/pcp/pcp-fan/pcp-homol-web
+EnvironmentFile=-/home/pcp/pcp-fan/pcp-homol-web/.env
+Environment=PATH=/home/pcp/.nvm/versions/node/v22.23.1/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
+StartLimitIntervalSec=60
+StartLimitBurst=5
+ExecStart=/home/pcp/.nvm/versions/node/v22.23.1/bin/node ./node_modules/vite/bin/vite.js preview --host 0.0.0.0 --port 5175 --strictPort
+KillMode=control-group
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

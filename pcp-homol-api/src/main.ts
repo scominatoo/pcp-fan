@@ -16,13 +16,19 @@ async function bootstrap() {
     }),
   );
 
-  // CORS — frontend React em desenvolvimento
+  // CORS — aceita uma origem ou várias separadas por vírgula no .env
+  // Ex.: https://pcp.synnex.com.br,http://localhost:5175
+  const corsRaw = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
+  const corsOrigin = corsRaw.includes(',')
+    ? corsRaw.split(',').map((o) => o.trim()).filter(Boolean)
+    : corsRaw;
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+    origin: corsOrigin,
     credentials: true,
   });
 
-  const port = process.env.BACKEND_PORT ?? 3000;
+  // Porta da API: BACKEND_PORT no .env (neste servidor = 3000)
+  const port = Number(process.env.BACKEND_PORT ?? 3000);
   await app.listen(port);
   console.log(`PCP Homologação API rodando em http://localhost:${port}/api`);
 }
