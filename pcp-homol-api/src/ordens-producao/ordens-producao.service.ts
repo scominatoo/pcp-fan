@@ -166,21 +166,23 @@ export class OrdensProducaoService {
       );
     }
 
-    if (!produto && !processo.produto) {
-      // Processo existe, mas não está ligado a um produto — ainda permite emitir OP.
-      // (Na prática o create exigir produto; aqui já avisamos cedo).
-      throw new BadRequestException(
-        `Roteiro encontrado (${processo.produtoCodigo.trim()}), ` +
-          'mas esse desenho não está no cadastro de Produtos. Cadastre o produto ou use outro desenho.',
-      );
-    }
+    const produtoFinal = produto ?? processo.produto;
 
-    const produtoFinal = produto ?? processo.produto!;
+    // Roteiro existe mas o desenho nunca foi cadastrado em Produtos — comum no
+    // legado (o COBOL sempre permitiu emitir OP só com desenho + roteiro).
+    // Busca a descrição em DesenhoCliente (PCPA106I) só para exibição.
+    const desenhoLegado = produtoFinal
+      ? null
+      : await this.prisma.desenhoCliente.findUnique({
+          where: { desenhoCliente: processo.produtoCodigo.trim() },
+        });
 
     return {
       produtoCodigo: processo.produtoCodigo.trim(),
-      produtoDescricao: produtoFinal.descricao,
-      produtoCodigoFormatado: formatarCodigoProduto(produtoFinal),
+      produtoDescricao: produtoFinal?.descricao ?? desenhoLegado?.descricao ?? null,
+      produtoCodigoFormatado: produtoFinal
+        ? formatarCodigoProduto(produtoFinal)
+        : processo.produtoCodigo.trim(),
       materiasPrimas: processo.materiasPrimas,
       operacoes: processo.operacoes.map((op) => {
         const alternativas = this.parseAlternativas(op.equipamentosTab);
@@ -213,9 +215,6 @@ export class OrdensProducaoService {
   async create(dto: CreateOrdemProducaoDto) {
     const produtoCodigo = dto.produtoCodigo.trim();
     const produto = await this.resolverProduto(produtoCodigo);
-    if (!produto) {
-      throw new BadRequestException('Desenho/produto não cadastrado');
-    }
 
     // Mesma lógica do prepararCriacao — antes o create só fazia match exato
     // e falhava quando o COBOL gravou o código com espaços à direita.
@@ -224,9 +223,15 @@ export class OrdensProducaoService {
 
     if (!processo || processo.operacoes.length === 0) {
       throw new BadRequestException(
-        'Processo produtivo não cadastrado para este produto',
+        !produto
+          ? 'Desenho/produto não cadastrado'
+          : 'Processo produtivo não cadastrado para este produto',
       );
     }
+
+    // Roteiro existe mas o desenho pode nunca ter sido cadastrado em Produtos
+    // (comum no legado — o COBOL sempre permitiu emitir OP sem esse vínculo).
+    const produtoFinal = produto ?? processo.produto;
 
     const tipo = dto.tipo ?? 'PRD';
     if (!TIPOS_VALIDOS.has(tipo)) {
@@ -270,7 +275,7 @@ export class OrdensProducaoService {
           codigo,
           // Grava a chave canônica do processo (alinhada ao PCPA70I)
           produtoCodigo: processo.produtoCodigo,
-          produtoId: produto.id,
+          produtoId: produtoFinal?.id ?? null,
           quantidade: dto.quantidade,
           tipo,
           clienteNome: dto.clienteNome?.trim() || null,
@@ -1183,7 +1188,7 @@ export class OrdensProducaoService {
     return this.prisma.produto.findFirst({
       where: {
         OR: [
-          { desenhoCliente: limpo },
+          { desenhoCliente: { equals: limpo, mode: 'insensitive' } },
           {
             desenhoSparta: {
               contains: limpo.replace(/\./g, ''),
