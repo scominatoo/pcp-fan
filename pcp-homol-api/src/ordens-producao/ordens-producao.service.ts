@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, ProcessoOperacao } from '@prisma/client';
+import { MateriaPrima, Prisma, ProcessoOperacao } from '@prisma/client';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { paginateParams, paginated } from '../common/pagination';
 import { formatarCodigoProduto } from '../produtos/produtos.serializer';
@@ -397,6 +397,13 @@ export class OrdensProducaoService {
       ...(await this.resolverMpsProcesso(processo?.materiasPrimas)),
       ...(await this.resolverMpsProcesso(processo?.materiasPrimasComplemento)),
     ];
+
+    const chavesResolvidas = new Set(
+      itensMp.map((i) => `${i.classeLetra}-${i.classeNumero}-${i.itemCodigo}`),
+    );
+    itensMp.push(
+      ...(await this.resolverMpsPecas(op.produtoCodigo, chavesResolvidas)),
+    );
 
     const requisicoes = await this.obterOuCriarRequisicoes(op.id, itensMp);
 
@@ -831,23 +838,75 @@ export class OrdensProducaoService {
         where: { classeLetra: letra, classeNumero: numero, itemCodigo },
       });
 
-      sugestoes.push({
-        materiaPrimaId: mp?.id ?? null,
-        codigo: mp
-          ? formatarCodigoMateriaPrima(mp)
-          : `${letra}${String(numero).padStart(2, '0')}${String(itemCodigo).padStart(5, '0')}`,
-        descricao: mp?.descricao ?? null,
-        // PCPA22II — descrição longa (material/tração/dureza), impressa junto na OP legada.
-        descricaoComplementar: [mp?.descricaoCompl1, mp?.descricaoCompl2]
-          .map((v) => v?.trim())
-          .filter((v): v is string => Boolean(v))
-          .join(' ') || null,
-        unidade: mp?.unidade ?? null,
-        peso: raw.peso != null ? Number(raw.peso) : null,
-        classeLetra: letra,
-        classeNumero: numero,
-        itemCodigo,
-      });
+      sugestoes.push(
+        this.montarItemMp(
+          mp,
+          letra,
+          numero,
+          itemCodigo,
+          raw.peso != null ? Number(raw.peso) : null,
+        ),
+      );
+    }
+
+    return sugestoes;
+  }
+
+  private montarItemMp(
+    mp: MateriaPrima | null,
+    letra: string,
+    numero: number,
+    itemCodigo: number,
+    peso: number | null,
+  ) {
+    return {
+      materiaPrimaId: mp?.id ?? null,
+      codigo: mp
+        ? formatarCodigoMateriaPrima(mp)
+        : `${letra}${String(numero).padStart(2, '0')}${String(itemCodigo).padStart(5, '0')}`,
+      descricao: mp?.descricao ?? null,
+      // PCPA22II — descrição longa (material/tração/dureza), impressa junto na OP legada.
+      descricaoComplementar: [mp?.descricaoCompl1, mp?.descricaoCompl2]
+        .map((v) => v?.trim())
+        .filter((v): v is string => Boolean(v))
+        .join(' ') || null,
+      unidade: mp?.unidade ?? null,
+      peso,
+      classeLetra: letra,
+      classeNumero: numero,
+      itemCodigo,
+    };
+  }
+
+  /**
+   * MPs relacionadas ao produto via PCPA103I (PRIMA-PECA) que não vieram do
+   * processo (PCPA70I/70C) — fonte mais completa da relação produto↔MP
+   * segundo a auditoria (materiasPrimasComplemento está quase vazio no legado).
+   * Sem peso (PRIMA-PECA é só chave de junção, sem campo extra).
+   */
+  private async resolverMpsPecas(
+    produtoCodigo: string,
+    jaResolvidas: Set<string>,
+  ) {
+    const pecas = await this.prisma.materiaPrimaPeca.findMany({
+      where: { produtoCodigo },
+      include: { materiaPrima: true },
+    });
+
+    const sugestoes: ReturnType<typeof this.montarItemMp>[] = [];
+    for (const peca of pecas) {
+      const chave = `${peca.classeLetra}-${peca.classeNumero}-${peca.itemCodigo}`;
+      if (jaResolvidas.has(chave)) continue;
+      jaResolvidas.add(chave);
+      sugestoes.push(
+        this.montarItemMp(
+          peca.materiaPrima,
+          peca.classeLetra,
+          peca.classeNumero,
+          peca.itemCodigo,
+          null,
+        ),
+      );
     }
 
     return sugestoes;

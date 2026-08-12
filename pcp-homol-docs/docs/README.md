@@ -45,21 +45,21 @@ Toda decisão de arquitetura, escopo, modelo de dados e plano de execução deve
 
 ## Status atual do projeto
 
-**Atualizado em 10/07/2026**
+**Atualizado em 12/08/2026**
 
 ### Onde estamos na homologação
 
 | Fase | Nome | Desenvolvimento | Aceite cliente |
 |------|------|-----------------|----------------|
 | 0 | Fundação | ✅ | — |
-| 1 | Cadastros | ✅ | ⬜ pendente (B8 + D6) |
+| 1 | Cadastros | ✅ | ⬜ pendente (B8 parcial + D6) |
 | 2 | Processo + OP | ✅ | ⬜ pendente |
 | 3 | Baixas | ✅ | ⬜ |
 | 4 | Programação | ✅ | ⬜ |
 | 5 | Relatórios | ✅ | ⬜ |
 | 6 | Aceite final | ⬜ | ⬜ |
 
-**Resumo:** Fase 5 (relatórios) concluída no código; próximo bloco é **Fase 6** (aceite final). Aceite FANANDRI pendente para Fases 1–5.
+**Resumo:** Fase 5 (relatórios) concluída no código; próximo bloco é **Fase 6** (aceite final). Aceite FANANDRI pendente para Fases 1–5. Auditoria de completude de dados de OP concluída (Bloco G) — só falta uma decisão de negócio (G3).
 
 ### Entregas já concluídas
 
@@ -73,6 +73,7 @@ Toda decisão de arquitetura, escopo, modelo de dados e plano de execução deve
 | Migração Pacote B (ferramentas + complemento processo) | ✅ |
 | Migração Pacote C (complemento MP + clientes) | ✅ |
 | Migração Pacote D (pedidos, NRMP, saldo) | ✅ |
+| Migração matéria-prima × peça (`PCPA103I` — Bloco G1) | ✅ |
 | API + telas cadastros (Fase 1) | ✅ |
 | API + telas OP + criação + emissão (Fase 2) | ✅ |
 | Homologação técnica Fase 2 (E5) | ✅ |
@@ -80,16 +81,27 @@ Toda decisão de arquitetura, escopo, modelo de dados e plano de execução deve
 | Migração + API + tela baixa MP (Fase 3b) | ✅ |
 | Migração + API + telas programação (Fase 4) | ✅ |
 | API + telas relatórios (Fase 5) | ✅ |
+| B8 — conferência técnica legado × banco (produtos, MP, OP) | ✅ |
+| Auditoria de completude de dados de OP (Bloco G) | ✅ G1 e G2; ⬜ G3 (decisão de negócio) |
 | CI/CD GitHub | ⬜ pendente (C5) |
 | Homologação funcional com cliente | ⬜ pendente |
 
 Mapa detalhado arquivo → tabela: [05-modelo-dados.md](05-modelo-dados.md).
 
+### Incidente recente
+
+Em 12/08/2026 o banco local (`pcp-homol-db`) foi encontrado vazio — volume
+Docker órfão após a reorganização de pastas. Restaurado do backup mais
+recente (21/07/2026) sem perda de dados; causa raiz corrigida travando o
+nome do volume no `docker-compose.yml`. Detalhes em
+[19-auditoria-completude-op.md](19-auditoria-completude-op.md#6-incidente-12082026--banco-local-zerado-resolvido).
+
 ### Próximas ações
 
-1. **B8** — conferir totais e amostra no COBOL legado  
-2. **D6** — homologação Fase 1 (cadastros) com FANANDRI  
-3. **Aceite Fase 2** — amostra de OPs no legado vs sistema novo  
-4. **C5** — publicar repos no GitHub + CI/CD  
+1. **B8** — falta só a conferência visual do usuário-chave no COBOL (parte técnica já concluída)
+2. **D6** — homologação Fase 1 (cadastros) com FANANDRI
+3. **Aceite Fase 2** — amostra de OPs no legado vs sistema novo
+4. **G3** — confirmar com a FANANDRI se vale migrar `PCPA23I` (pedido de venda)
+5. **C5** — publicar repos no GitHub + CI/CD
 
 Ver detalhes em [08-proximos-passos.md](08-proximos-passos.md).

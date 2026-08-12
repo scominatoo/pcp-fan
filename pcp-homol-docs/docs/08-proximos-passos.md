@@ -4,19 +4,21 @@ Ações na ordem recomendada. Atualize este arquivo conforme for concluindo.
 
 ---
 
-## Onde estamos agora (10/07/2026)
+## Onde estamos agora (12/08/2026)
 
 | Dimensão | Situação |
 |----------|----------|
 | **Fase de homologação** | **Fase 5** (relatórios) concluída no código |
 | **Desenvolvimento Fase 1** | ✅ API + telas produtos e matéria-prima |
 | **Desenvolvimento Fase 2** | ✅ Migração, consulta, criação e emissão de OP |
-| **Desenvolvimento Fase 3a** | 🔄 Migração + API + tela de baixas OP |
+| **Desenvolvimento Fase 3a** | ✅ Migração + API + tela de baixas OP |
 | **Homologação técnica Fase 2** | ✅ E5 concluído |
-| **Aceite funcional FANANDRI** | ⬜ Pendente (Fase 1 e Fase 2) |
+| **Aceite funcional FANANDRI** | ⬜ Pendente (Fases 1–5) |
 | **Próximo bloco de código** | Fase 6 — aceite final |
 | **Desenvolvimento Fase 4** | ✅ Migração + API + telas programação |
 | **Desenvolvimento Fase 3b** | ✅ Migração + API + tela baixa MP |
+| **B8** | ✅ parte técnica; ⬜ falta conferência visual FANANDRI |
+| **Bloco G (auditoria completude OP)** | ✅ G1 e G2; ⬜ G3 (decisão de negócio) |
 
 **Pasta do projeto:** todos os repositórios ficam em `/Users/scominato/pcp-homol/` (ver `04-estrutura-projeto.md`).
 
@@ -76,7 +78,7 @@ npm run dev
 | B5 | Produtos no PostgreSQL | **1.834** gravados, 0 erros | ✅ |
 | B6 | Matéria-prima no PostgreSQL | **3.298** gravados, 0 erros | ✅ |
 | B7 | Exportar via `rebuild` (`POWER.BAT`) | Não necessário — leitura INDEXED calibrada | ✅ (dispensado) |
-| B8 | Conferir totais com COBOL | Contagem manual no sistema legado vs. banco | ⬜ |
+| B8 | Conferir totais com COBOL | Parte técnica (leitura direta do `.DAT` vs. banco) ✅ — falta só conferência visual do usuário-chave no COBOL | 🔄 |
 
 ### Calibração INDEXED (09/07/2026)
 
@@ -100,7 +102,14 @@ Implementação: `tools/migracao/src/ler-indexed-dat.ts` + `npm run validar:inde
 | `PCPA18I.DAT` | 1.834 | 1.834 | 0 |
 | `PCPA22I.DAT` | 3.298 | 3.298 | 0 |
 
-**Próxima ação:** **B8** — conferir contagens e amostra de 10 itens no COBOL legado.
+**Status B8 (12/08/2026):** parte técnica concluída via `npm run verificar:b8`
+(leitura direta do `.DAT` vs. PostgreSQL) — contagens batendo (produtos e MP
+100%; OP 72.002/72.003, divergência de 2 registros explicada e dentro do
+critério `>99%`) e amostra de 10 itens 100% campo a campo em produtos, MP
+e OP. Detalhe completo em
+[`07-plano-homologacao.md`](./07-plano-homologacao.md#resultado-técnico--b8-conferência-independente-legado--postgresql).
+Falta só a conferência visual do usuário-chave FANANDRI no COBOL (não
+automatizável neste ambiente).
 
 ---
 
@@ -186,6 +195,18 @@ Implementação: `tools/migracao/src/ler-indexed-dat.ts` + `npm run validar:inde
 | F4.3 | Script `migrar:programacao` | ✅ (1.383 registros) |
 | F4.4 | API: listar, resumo, atrasos, criar, entrega | ✅ |
 | F4.5 | Telas: lista, nova, detalhe + entrega | ✅ |
+## Bloco G — Gaps de importação encontrados na auditoria de OP (12/08/2026)
+
+Detalhes completos, layout COBOL e plano em [`19-auditoria-completude-op.md`](./19-auditoria-completude-op.md).
+
+| # | Ação | Detalhe | Status |
+|---|------|---------|--------|
+| G1 | Migrar `PCPA103I` → `MateriaPrimaPeca` | Calibrar INDEXED (offset 128, passo 28, skip 2), layout, script `migrar:prima-peca`, model Prisma | ✅ (2.892 registros) |
+| G2 | Investigar `ABERTO.DAT`/`CONT_OP5.DAT` | Layout decodificado por engenharia reversa; conjunto de OPs por produto confirmado idêntico ao banco — **decisão: não migrar** | ✅ |
+| G3 | Decisão de negócio: `PCPA23I` (pedido de venda) | Link técnico `PD-OP` existe, mas legado tem só ~dezenas de registros (1998–2000); confirmar valor com Fanandri antes de migrar | ⬜ |
+
+---
+
 ## Bloco F5 — Relatórios (Fase 5)
 
 | # | Ação | Status |
@@ -211,7 +232,7 @@ Implementação: `tools/migracao/src/ler-indexed-dat.ts` + `npm run validar:inde
 2. ~~Bloco B (migração cadastros)~~ — **feito** (falta B8: conferência manual COBOL)
 3. ~~Bloco C (repos separados)~~ — **feito** (falta C5: CI/CD)
 4. ~~Bloco E (processo + OP)~~ — **feito** (falta aceite funcional com FANANDRI)
-5. **Bloco B8** — validar totais e amostra de 10 itens com o sistema legado
+5. ~~**Bloco B8** — validar totais e amostra de 10 itens com o sistema legado~~ — **parte técnica feita** (12/08/2026); falta conferência visual do usuário-chave FANANDRI
 6. **Bloco D6** — homologação Fase 1 (cadastros) com FANANDRI
 7. ~~**Bloco E5** — homologação técnica Fase 2 (OPs)~~ — **feito**; pendente só aceite funcional com FANANDRI
 8. ~~**E4b** — implementar criação/emissão de OP conforme `12-engenharia-reversa-op.md`~~ — **feito**
@@ -271,3 +292,8 @@ Implementação: `tools/migracao/src/ler-indexed-dat.ts` + `npm run validar:inde
 | 10/07/2026 | **Fase 3b** — baixa MP: doc 14, schema/migration, `migrar:baixas-mp`, API e tela no detalhe da OP |
 | 10/07/2026 | **Fase 4** — programação: doc 15, `migrar:programacao`, API e telas de programação |
 | 10/07/2026 | **Fase 5** — relatórios: doc 16, API `/relatorios/*` e telas no frontend |
+| 12/08/2026 | **Incidente de infra** — banco `pcp-homol-db` estava vazio (volume Docker órfão após reorganização de pastas); restaurado de `backups/pcp_homol_full_20260721-1004.dump` + `prisma migrate deploy`; nome do volume travado em `docker-compose.yml` para não repetir. Detalhes em [`19-auditoria-completude-op.md`](./19-auditoria-completude-op.md#6-incidente-12082026--banco-local-zerado-resolvido) |
+| 12/08/2026 | **Bloco G1** — migração `PCPA103I` (PRIMA-PECA) → tabela `MateriaPrimaPeca`: calibração INDEXED, layout, script `migrar:prima-peca`, model Prisma + migration; 2.892 registros gravados |
+| 12/08/2026 | **B8 (parte técnica)** — script `verificar-b8.ts`: leitura direta dos `.DAT` vs. PostgreSQL para produtos, MP e OP; contagens e amostra de 10 itens conferindo (>99%, divergência de 2 OPs explicada e documentada) |
+| 12/08/2026 | **Bloco G2** — `ABERTO.DAT`/`CONT_OP5.DAT` decodificados por engenharia reversa (sem `.COB` fonte); conjunto de OPs por produto confirmado idêntico ao PostgreSQL em amostra real — decisão: não migrar (cache derivado) |
+| 12/08/2026 | **Emissão de OP** — `MateriaPrimaPeca` (`PCPA103I`) conectada como fonte complementar do bloco de matérias-primas na impressão, além de `materiasPrimas`/`materiasPrimasComplemento` do processo; confirmado no banco que **42.287 OPs em aberto** tinham os dois campos do processo vazios e agora recebem dados via PRIMA-PECA |

@@ -78,6 +78,7 @@ Legenda: ✅ migrado no PostgreSQL · ⚠️ parcial / quase vazio no legado · 
 | `PCPA41I.DAT` | PC1041 | `PedidoCompra` | ✅ | 11.398 |
 | `PCPA41II.DAT` | PC1041 | `PedidoMpAberto` | ✅ | 83.321 |
 | `PCPA04I.DAT` | PC1004 | `Cliente` | ✅ | 813 |
+| `PCPA103I.DAT` | PC1103 | `MateriaPrimaPeca` | ✅ | 2.892 |
 | — | — | `MigracaoLog` | ✅ | controle interno |
 
 ### Ainda pendente (não é buraco de dados mestres)
@@ -88,6 +89,16 @@ Legenda: ✅ migrado no PostgreSQL · ⚠️ parcial / quase vazio no legado · 
 | Aceite funcional FANANDRI (Fases 1–5) | ⬜ |
 | CI/CD GitHub (C5) | ⬜ |
 | API/telas para Cliente, Ferramenta, Pedido, NRMP | ⬜ (dados migrados; UI futura) |
+
+### Gaps encontrados fora deste mapa (auditoria 12/08/2026)
+
+`ABERTO.DAT`/`CONT_OP5.DAT` (controle de OP aberta) e `PCPA23I.DAT`
+(pedido de venda) existem no legado mas **não** têm script `migrar:*` nem
+model Prisma — não estavam mapeados nem como migrados, nem como fora de
+escopo. `PCPA103I.DAT` (PRIMA-PECA) era o terceiro gap, migrado em
+12/08/2026 (ver linha na tabela acima). Detalhes, layout COBOL confirmado
+e plano de importação em
+[`19-auditoria-completude-op.md`](./19-auditoria-completude-op.md).
 
 ---
 
@@ -160,6 +171,24 @@ Complementos: `PCPA22II.DAT` (descrições longas, preço), `PCPA22B.DAT` (desen
 | `PROGRAMA-QTDE-APRODUZIR` | `qtdeAProduzir` |
 | `PROGRAMA-PEDIDO` | `pedidoRef` |
 | `PROGRAMA-DES-CLI` | `desenhoCliente` |
+
+---
+
+## Entidade: Matéria-prima × peça (`PCPA103I` — PRIMA-PECA)
+
+Tabela de junção pura (sem campos extras): liga uma peça (`CHAVE-PECA`,
+mesma referência X15 usada em `OP-PRODUTO`/`PROCESSO-PRODUTO` — em geral o
+desenho do cliente) a uma matéria-prima (`CHAVE-PRIMA` = classe letra +
+classe número + item).
+
+| Campo COBOL | Campo Prisma |
+|-------------|--------------|
+| `CHAVE-PECA` | `produtoCodigo` (+ `produtoId` resolvido por lookup) |
+| `PP-CLASSE-L/N` + `PP-ITEN` | `classeLetra`/`classeNumero`/`itemCodigo` (+ `materiaPrimaId` resolvido) |
+
+`produtoId` e `materiaPrimaId` são FKs opcionais — nem toda referência do
+legado bate com um `Produto`/`MateriaPrima` migrado (ver nota na auditoria,
+[`19-auditoria-completude-op.md`](./19-auditoria-completude-op.md)).
 
 ---
 
