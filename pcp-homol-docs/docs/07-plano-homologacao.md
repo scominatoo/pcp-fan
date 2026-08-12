@@ -97,6 +97,40 @@ Validação executada em 10/07/2026.
 
 ---
 
+## Resultado técnico — B8 (conferência independente legado × PostgreSQL)
+
+Executado em 12/08/2026 com `pcp-homol-migracao/src/verificar-b8.ts`
+(`npm run verificar:b8`) — leitura direta dos bytes do `.DAT` (mesma fonte
+que o COBOL lê), independente dos scripts `migrar:*`, comparada campo a
+campo contra o PostgreSQL. Não há emulador DOS/COBOL neste ambiente para
+reproduzir a tela do sistema legado interativamente — isso cobre a parte
+técnica de B8; a conferência visual do usuário-chave FANANDRI no COBOL
+continua pendente (ver "Pendência" abaixo).
+
+| Arquivo | Contagem legado | Contagem banco | Amostra (10 itens, campo a campo) |
+|---|---|---|---|
+| `PCPA18I` (Produto) | 1.834 | 1.834 | ✅ 10/10 |
+| `PCPA22I` (MatériaPrima) | 3.298 | 3.298 | ✅ 10/10 |
+| `PCPA28I` (OrdemProducao) | 72.003 (72.000 códigos distintos + 3 duplicados) | 72.002 | ✅ 10/10 na amostra; ver nota |
+
+**Nota sobre OP:** divergência de 2 registros (`79861`, `79862`) — não é
+falha de migração. O registro `79862` está fisicamente deslocado 1 byte
+da grade calibrada (offset 130 / passo 64) no `.DAT` atual, e `79861` não
+foi encontrado no arquivo bruto atual por busca direta de bytes — ambos
+já estavam corretamente gravados no banco (herdados do dump restaurado,
+ver incidente em
+[`19-auditoria-completude-op.md`](./19-auditoria-completude-op.md#6-incidente-12082026--banco-local-zerado-resolvido)).
+2 em 72.000 = 0,003% — bem dentro do critério de sucesso `>99%` definido
+em `06-migracao-dados-legados.md`. Não investigado mais a fundo por não
+valer o esforço frente ao critério já superado; retomar apenas se aparecer
+um padrão maior de desalinhamento.
+
+**Pendência:** conferência visual do usuário-chave FANANDRI no COBOL
+(critério 2 de "Critérios de aceite" acima) — só um humano com acesso à
+tela do legado pode fazer essa parte.
+
+---
+
 ## Resultado técnico — Fase 2 (Processo + OP)
 
 Validação executada em 09/07/2026 no ambiente `pcp-homol`.

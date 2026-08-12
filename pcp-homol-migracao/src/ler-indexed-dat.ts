@@ -242,6 +242,15 @@ export const INDEXED_PCPA70XI: ConfigArquivoIndexed = {
   skipIndiceBytes: 2,
 };
 
+/** Relação matéria-prima × peça — PCPA103I / PC1103 (calibrado 12/08/2026) */
+export const INDEXED_PCPA103I: ConfigArquivoIndexed = {
+  nomeArquivo: 'PCPA103I.DAT',
+  offsetInicial: 128,
+  passoFisico: 28,
+  tamanhoLogico: 23,
+  skipIndiceBytes: 2,
+};
+
 /**
  * Lê registros lógicos de um arquivo .DAT indexado Micro Focus.
  * Retorna um buffer por registro, já cortado no tamanho lógico do FD.

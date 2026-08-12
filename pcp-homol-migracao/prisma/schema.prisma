@@ -56,6 +56,7 @@ model Produto {
   ordensProducao    OrdemProducao[]
   processos         ProcessoProdutivo[]
   programacoes      ProgramacaoEntrega[]
+  materiasPrimasPecas MateriaPrimaPeca[]
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -94,10 +95,50 @@ model MateriaPrima {
   complementoExtra Json?
   movimentos      MovimentoMateriaPrima[]
   baixasOp        OrdemProducaoBaixaMateriaPrima[]
+  requisicoes     RequisicaoMaterial[]
+  pecas           MateriaPrimaPeca[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@unique([classeLetra, classeNumero, itemCodigo])
+}
+
+/// Relação matéria-prima × peça — PCPA103I (PC1103, "Consulta de M.Prima X produtos")
+model MateriaPrimaPeca {
+  id             Int           @id @default(autoincrement())
+  /// CHAVE-PECA (X15) — mesma referência usada em OP-PRODUTO/PROCESSO-PRODUTO
+  produtoCodigo  String        @db.VarChar(15)
+  produtoId      Int?
+  produto        Produto?      @relation(fields: [produtoId], references: [id])
+  classeLetra    String        @db.VarChar(1)
+  classeNumero   Int
+  itemCodigo     Int
+  materiaPrimaId Int?
+  materiaPrima   MateriaPrima? @relation(fields: [materiaPrimaId], references: [id])
+  createdAt      DateTime      @default(now())
+
+  @@unique([produtoCodigo, classeLetra, classeNumero, itemCodigo])
+}
+
+/// Requisição de matéria-prima impressa na emissão da OP (folha separada por item)
+/// Fonte legada: IMPRIME-REQUISICAO (PC1041)
+model RequisicaoMaterial {
+  id              Int       @id @default(autoincrement())
+  numero          Int
+  ano             Int
+  itemOrdem       Int
+  ordemProducaoId Int
+  ordemProducao   OrdemProducao @relation(fields: [ordemProducaoId], references: [id], onDelete: Cascade)
+  classeLetra     String    @db.VarChar(1)
+  classeNumero    Int
+  itemCodigo      Int
+  materiaPrimaId  Int?
+  materiaPrima    MateriaPrima? @relation(fields: [materiaPrimaId], references: [id])
+  quantidade      Decimal?  @db.Decimal(11, 2)
+  createdAt       DateTime  @default(now())
+
+  @@unique([numero])
+  @@unique([ordemProducaoId, classeLetra, classeNumero, itemCodigo])
 }
 
 /// Clientes — PCPA04I (PC1004) — referência para OP / comercial
@@ -266,6 +307,7 @@ model OrdemProducao {
   baixasOperacao    OrdemProducaoBaixaOperacao[]
   baixasMateriaPrima OrdemProducaoBaixaMateriaPrima[]
   movimentosMp       MovimentoMateriaPrima[]
+  requisicoesMaterial RequisicaoMaterial[]
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -296,10 +338,11 @@ model OrdemProducaoBaixaConsolidada {
   ordemProducaoId  Int           @unique
   ordemProducao    OrdemProducao @relation(fields: [ordemProducaoId], references: [id], onDelete: Cascade)
   dataBaixa        DateTime?
-  horaBaixa        String?       @db.VarChar(5)
+  horaBaixa        String?       @db.VarChar(5) // HH:MM
   pecasProduzidas  Int           @default(0)
   mpConsumida      Int           @default(0)
   rolos            Int           @default(0)
+  /// Tempos por operação 1–25: [{ prepMin, prodMin }]
   temposOperacoes  Json?
   turno1           Int           @default(0)
   turno2           Int           @default(0)
@@ -361,11 +404,12 @@ model OrdemProducaoBaixaMateriaPrima {
 /// Movimento de matéria-prima — fonte PCPA76I (PC1076) e lançamentos manuais
 model MovimentoMateriaPrima {
   id              Int           @id @default(autoincrement())
+  /// Chave do lote NRMP (MV-CODIGO) — vazio em lançamentos PC1109
   loteLetra       String        @default("") @db.VarChar(2)
   loteNumero      Int           @default(0)
   loteLetra2      String        @default("") @db.VarChar(2)
   indice          Int           @default(0)
-  tipo            String        @db.VarChar(1)
+  tipo            String        @db.VarChar(1) // B = baixa, R = reversão/entrada
   dataMovimento   DateTime?
   nota            Int?
   materiaPrimaId  Int?

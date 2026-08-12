@@ -18,4 +18,9 @@ services:
       retries: 10
 
 volumes:
+  # Nome fixo — não depende do nome do projeto (diretório) do Compose.
+  # Ver docs/08-proximos-passos.md (incidente 12/08/2026): renomear/mover a
+  # pasta muda o nome do projeto Compose e cria um volume novo/vazio,
+  # órfão do anterior, se o nome não for travado aqui.
   pcp_pgdata:
+    name: pcp-homol-api_pcp_pgdata

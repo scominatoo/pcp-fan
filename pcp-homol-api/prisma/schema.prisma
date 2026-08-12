@@ -56,6 +56,7 @@ model Produto {
   ordensProducao    OrdemProducao[]
   processos         ProcessoProdutivo[]
   programacoes      ProgramacaoEntrega[]
+  materiasPrimasPecas MateriaPrimaPeca[]
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -95,10 +96,28 @@ model MateriaPrima {
   movimentos      MovimentoMateriaPrima[]
   baixasOp        OrdemProducaoBaixaMateriaPrima[]
   requisicoes     RequisicaoMaterial[]
+  pecas           MateriaPrimaPeca[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@unique([classeLetra, classeNumero, itemCodigo])
+}
+
+/// Relação matéria-prima × peça — PCPA103I (PC1103, "Consulta de M.Prima X produtos")
+model MateriaPrimaPeca {
+  id             Int           @id @default(autoincrement())
+  /// CHAVE-PECA (X15) — mesma referência usada em OP-PRODUTO/PROCESSO-PRODUTO
+  produtoCodigo  String        @db.VarChar(15)
+  produtoId      Int?
+  produto        Produto?      @relation(fields: [produtoId], references: [id])
+  classeLetra    String        @db.VarChar(1)
+  classeNumero   Int
+  itemCodigo     Int
+  materiaPrimaId Int?
+  materiaPrima   MateriaPrima? @relation(fields: [materiaPrimaId], references: [id])
+  createdAt      DateTime      @default(now())
+
+  @@unique([produtoCodigo, classeLetra, classeNumero, itemCodigo])
 }
 
 /// Requisição de matéria-prima impressa na emissão da OP (folha separada por item)
