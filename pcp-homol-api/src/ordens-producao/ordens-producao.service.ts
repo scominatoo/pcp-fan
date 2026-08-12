@@ -403,13 +403,16 @@ export class OrdensProducaoService {
     return {
       op: serializeOrdemProducao(op, true),
       tipoLabel: labelTipoOp(op.tipo),
-      materiasPrimas: itensMp.map(({ materiaPrimaId, codigo, descricao, unidade, peso }) => ({
-        materiaPrimaId,
-        codigo,
-        descricao,
-        unidade,
-        peso,
-      })),
+      materiasPrimas: itensMp.map(
+        ({ materiaPrimaId, codigo, descricao, descricaoComplementar, unidade, peso }) => ({
+          materiaPrimaId,
+          codigo,
+          descricao,
+          descricaoComplementar,
+          unidade,
+          peso,
+        }),
+      ),
       operacoes,
       requisicoes,
       emitidoEm: new Date().toISOString(),
@@ -808,6 +811,7 @@ export class OrdensProducaoService {
       materiaPrimaId: number | null;
       codigo: string;
       descricao: string | null;
+      descricaoComplementar: string | null;
       unidade: string | null;
       peso: number | null;
       classeLetra: string;
@@ -833,6 +837,11 @@ export class OrdensProducaoService {
           ? formatarCodigoMateriaPrima(mp)
           : `${letra}${String(numero).padStart(2, '0')}${String(itemCodigo).padStart(5, '0')}`,
         descricao: mp?.descricao ?? null,
+        // PCPA22II — descrição longa (material/tração/dureza), impressa junto na OP legada.
+        descricaoComplementar: [mp?.descricaoCompl1, mp?.descricaoCompl2]
+          .map((v) => v?.trim())
+          .filter((v): v is string => Boolean(v))
+          .join(' ') || null,
         unidade: mp?.unidade ?? null,
         peso: raw.peso != null ? Number(raw.peso) : null,
         classeLetra: letra,
@@ -856,6 +865,7 @@ export class OrdensProducaoService {
       materiaPrimaId: number | null;
       codigo: string;
       descricao: string | null;
+      descricaoComplementar: string | null;
       unidade: string | null;
       peso: number | null;
       classeLetra: string;
@@ -868,6 +878,7 @@ export class OrdensProducaoService {
       numeroFormatado: string;
       codigo: string;
       descricao: string | null;
+      descricaoComplementar: string | null;
       unidade: string | null;
       quantidade: number | null;
     }> = [];
@@ -900,6 +911,7 @@ export class OrdensProducaoService {
         numeroFormatado: `${String(requisicao.numero).padStart(5, '0')}/${String(requisicao.ano).padStart(2, '0')}`,
         codigo: mp.codigo,
         descricao: mp.descricao,
+        descricaoComplementar: mp.descricaoComplementar,
         unidade: mp.unidade,
         quantidade: mp.peso,
       });

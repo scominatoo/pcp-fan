@@ -58,6 +58,7 @@ export type EmissaoOp = {
     materiaPrimaId: number | null;
     codigo: string;
     descricao: string | null;
+    descricaoComplementar: string | null;
     unidade: string | null;
     peso: number | null;
   }>;
@@ -80,6 +81,7 @@ export type EmissaoOp = {
     numeroFormatado: string;
     codigo: string;
     descricao: string | null;
+    descricaoComplementar: string | null;
     unidade: string | null;
     quantidade: number | null;
   }>;

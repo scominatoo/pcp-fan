@@ -104,7 +104,14 @@ export function OrdemProducaoEmissaoPage() {
                 {materiasPrimas.map((mp) => (
                   <tr key={mp.codigo}>
                     <td>{mp.codigo}</td>
-                    <td>{mp.descricao ?? '—'}</td>
+                    <td>
+                      <div>{mp.descricao ?? '—'}</div>
+                      {mp.descricaoComplementar && (
+                        <small className="emissao-obs">
+                          {mp.descricaoComplementar}
+                        </small>
+                      )}
+                    </td>
                     <td>
                       {mp.peso != null
                         ? `${mp.peso.toLocaleString('pt-BR')}${mp.unidade ? ` ${mp.unidade}` : ''}`
@@ -205,7 +212,14 @@ export function OrdemProducaoEmissaoPage() {
                 <tr>
                   <td>{String(r.itemOrdem).padStart(2, '0')}</td>
                   <td>{r.codigo}</td>
-                  <td>{r.descricao ?? '—'}</td>
+                  <td>
+                    <div>{r.descricao ?? '—'}</div>
+                    {r.descricaoComplementar && (
+                      <small className="emissao-obs">
+                        {r.descricaoComplementar}
+                      </small>
+                    )}
+                  </td>
                   <td>{r.unidade ?? '—'}</td>
                   <td>
                     {r.quantidade != null
