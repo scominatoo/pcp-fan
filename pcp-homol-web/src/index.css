@@ -1148,6 +1148,25 @@ button.link {
   background: var(--steel-100);
 }
 
+.emissao-mp-bloco {
+  margin-bottom: 0.85rem;
+}
+
+.emissao-mp-bloco:last-child {
+  margin-bottom: 0;
+}
+
+.emissao-mp-rotulo {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.emissao-mp-compl,
+.emissao-mp-peso {
+  display: block;
+  margin-top: 0.2rem;
+}
+
 .emissao-footer {
   margin-top: 2rem;
   padding-top: 0.75rem;

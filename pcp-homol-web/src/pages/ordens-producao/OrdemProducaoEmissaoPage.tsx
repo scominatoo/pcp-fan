@@ -92,35 +92,26 @@ export function OrdemProducaoEmissaoPage() {
         {materiasPrimas.length > 0 && (
           <section className="emissao-bloco">
             <h2>Matérias-primas</h2>
-            <table className="emissao-table">
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Descrição</th>
-                  <th>Peso</th>
-                </tr>
-              </thead>
-              <tbody>
-                {materiasPrimas.map((mp) => (
-                  <tr key={mp.codigo}>
-                    <td>{mp.codigo}</td>
-                    <td>
-                      <div>{mp.descricao ?? '—'}</div>
-                      {mp.descricaoComplementar && (
-                        <small className="emissao-obs">
-                          {mp.descricaoComplementar}
-                        </small>
-                      )}
-                    </td>
-                    <td>
-                      {mp.peso != null
-                        ? `${mp.peso.toLocaleString('pt-BR')}${mp.unidade ? ` ${mp.unidade}` : ''}`
-                        : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {materiasPrimas.map((mp) => (
+              <div className="emissao-mp-bloco" key={mp.codigo}>
+                <div>
+                  <span className="emissao-mp-rotulo">Cod.Mat.Pri.:</span>{' '}
+                  <span className="mono">{mp.codigo}</span>{' '}
+                  {mp.descricao ?? '—'}
+                </div>
+                {mp.descricaoComplementar && (
+                  <small className="emissao-obs emissao-mp-compl">
+                    {mp.descricaoComplementar}
+                  </small>
+                )}
+                <small className="emissao-mp-peso">
+                  Peso:{' '}
+                  {mp.peso != null
+                    ? `${mp.peso.toLocaleString('pt-BR')}${mp.unidade ? ` ${mp.unidade}` : ''}`
+                    : '—'}
+                </small>
+              </div>
+            ))}
           </section>
         )}
 
