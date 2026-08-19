@@ -90,7 +90,7 @@ export function OrdemProducaoEmissaoPage() {
         </section>
 
         {materiasPrimas.length > 0 && (
-          <section className="emissao-bloco">
+          <section className="emissao-bloco emissao-mp-secao">
             <h2>Matérias-primas</h2>
             {materiasPrimas.map((mp) => (
               <div className="emissao-mp-bloco" key={mp.codigo}>

@@ -1150,6 +1150,7 @@ button.link {
 
 .emissao-mp-bloco {
   margin-bottom: 0.85rem;
+  break-inside: avoid;
 }
 
 .emissao-mp-bloco:last-child {
@@ -1414,6 +1415,11 @@ button.link {
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
   body {
     background: #fff;
   }
@@ -1438,6 +1444,10 @@ button.link {
     box-shadow: none;
     border: none;
     padding: 0;
+  }
+
+  .emissao-mp-secao {
+    break-inside: avoid;
   }
 
   .emissao-requisicao {
