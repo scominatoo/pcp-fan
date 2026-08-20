@@ -1446,11 +1446,11 @@ button.link {
     padding: 0;
   }
 
-  .emissao-mp-secao {
+  .emissao-requisicao {
     break-inside: avoid;
   }
 
-  .emissao-requisicao {
+  .emissao-footer + .emissao-requisicao {
     break-before: page;
     border-top: none;
     padding-top: 0;
