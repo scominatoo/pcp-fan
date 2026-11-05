@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -270,28 +271,28 @@ export class OrdensProducaoService {
     });
 
     try {
-      const op = await this.prisma.ordemProducao.create({
-        data: {
-          codigo,
-          // Grava a chave canônica do processo (alinhada ao PCPA70I)
-          produtoCodigo: processo.produtoCodigo,
-          produtoId: produtoFinal?.id ?? null,
-          quantidade: dto.quantidade,
-          tipo,
-          clienteNome: dto.clienteNome?.trim() || null,
-          dataAbertura: dto.dataAbertura
-            ? new Date(dto.dataAbertura)
-            : agora,
-          horaAbertura:
-            dto.horaAbertura ?? this.formatarHoraAgora(agora),
-          baixada: false,
-          baixadaMp: false,
-          baixadaProduto: false,
-          operacoes: { create: operacoesCreate },
-        },
-        include: this.includeOpCompleto(),
-      });
-      return serializeOrdemProducao(op, true);
+        const op = await this.prisma.ordemProducao.create({
+          data: {
+            codigo,
+            // Grava a chave canônica do processo (alinhada ao PCPA70I)
+            produtoCodigo: processo.produtoCodigo,
+            produtoId: produtoFinal?.id ?? null,
+            quantidade: dto.quantidade,
+            tipo,
+            clienteNome: dto.clienteNome?.trim() || null,
+            dataAbertura: dto.dataAbertura
+              ? new Date(dto.dataAbertura)
+              : agora,
+            horaAbertura:
+              dto.horaAbertura ?? this.formatarHoraAgora(agora),
+            baixada: false,
+            baixadaMp: false,
+            baixadaProduto: false,
+            operacoes: { create: operacoesCreate },
+          },
+          include: this.includeOpCompleto(),
+        });
+        return serializeOrdemProducao(op, true);
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
@@ -775,7 +776,20 @@ export class OrdensProducaoService {
       );
     }
 
+    try {
     await this.prisma.$transaction(async (tx) => {
+      // Desconta o estoque primeiro e só se ainda houver saldo: duas baixas
+      // ao mesmo tempo não conseguem deixar o estoque negativo.
+      const descontou = await tx.materiaPrima.updateMany({
+        where: { id: mp.id, quantidade: { gte: quantidade } },
+        data: { quantidade: { decrement: quantidade } },
+      });
+      if (descontou.count === 0) {
+        throw new BadRequestException(
+          'Estoque insuficiente — o saldo mudou enquanto a baixa era registrada. Confira e tente de novo.',
+        );
+      }
+
       await tx.ordemProducaoBaixaMateriaPrima.create({
         data: {
           ordemProducaoId: id,
@@ -806,18 +820,23 @@ export class OrdensProducaoService {
         },
       });
 
-      await tx.materiaPrima.update({
-        where: { id: mp.id },
-        data: {
-          quantidade: { decrement: quantidade },
-        },
-      });
-
       await tx.ordemProducao.update({
         where: { id },
         data: { baixadaMp: true },
       });
     });
+    } catch (e) {
+      // Mesma MP, mesma OP, mesmo instante: colide na chave do movimento
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Baixa idêntica registrada no mesmo instante. Confira a lista e tente de novo.',
+        );
+      }
+      throw e;
+    }
 
     return this.obterBaixasMp(id);
   }
