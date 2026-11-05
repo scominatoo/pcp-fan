@@ -21,7 +21,8 @@ export function OrdemProducaoEmissaoPage() {
   if (isError) return <p className="erro">{(error as Error).message}</p>;
   if (!data) return null;
 
-  const { op, tipoLabel, operacoes, materiasPrimas, requisicoes } = data;
+  const { op, tipoLabel, pesoPeca, operacoes, materiasPrimas, requisicoes } =
+    data;
   const hoje = new Date().toLocaleDateString('pt-BR');
 
   return (
@@ -86,6 +87,12 @@ export function OrdemProducaoEmissaoPage() {
               <strong>Cliente</strong>
               <div className="emissao-valor">{op.clienteNome ?? '—'}</div>
             </div>
+            {(pesoPeca.bruto != null || pesoPeca.liquido != null) && (
+              <div>
+                <strong>Peso da peça</strong>
+                <div className="emissao-valor">{formatarPesoDaPeca(pesoPeca)}</div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -105,10 +112,22 @@ export function OrdemProducaoEmissaoPage() {
                   </small>
                 )}
                 <small className="emissao-mp-peso">
-                  Peso:{' '}
+                  Consumo MP/peça:{' '}
                   {mp.peso != null
-                    ? `${mp.peso.toLocaleString('pt-BR')}${mp.unidade ? ` ${mp.unidade}` : ''}`
+                    ? `${formatarPesoPeca(mp.peso)}${mp.unidade ? ` ${mp.unidade}` : ''}`
                     : '—'}
+                  {mp.pesoTotal != null && (
+                    <>
+                      {' · '}
+                      <strong>
+                        Total OP ({op.quantidade.toLocaleString('pt-BR')} pç):{' '}
+                        {mp.pesoTotal.toLocaleString('pt-BR', {
+                          maximumFractionDigits: 3,
+                        })}
+                        {mp.unidade ? ` ${mp.unidade}` : ''}
+                      </strong>
+                    </>
+                  )}
                 </small>
               </div>
             ))}
@@ -214,7 +233,9 @@ export function OrdemProducaoEmissaoPage() {
                   <td>{r.unidade ?? '—'}</td>
                   <td>
                     {r.quantidade != null
-                      ? r.quantidade.toLocaleString('pt-BR')
+                      ? r.quantidade.toLocaleString('pt-BR', {
+                          maximumFractionDigits: 3,
+                        })
                       : '—'}
                   </td>
                   <td></td>
@@ -226,4 +247,16 @@ export function OrdemProducaoEmissaoPage() {
       </article>
     </div>
   );
+}
+
+/** Peso bruto por peça — até 8 casas, como o legado (ZZ9,99999999). */
+function formatarPesoPeca(peso: number) {
+  return peso.toLocaleString('pt-BR', { maximumFractionDigits: 8 });
+}
+
+/** Peso bruto / líquido da peça, em kg (só exibido quando há cadastro). */
+function formatarPesoDaPeca(peso: { bruto: number | null; liquido: number | null }) {
+  const fmt = (v: number | null) =>
+    v != null ? `${v.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} kg` : '—';
+  return `Bruto ${fmt(peso.bruto)} · Líquido ${fmt(peso.liquido)}`;
 }

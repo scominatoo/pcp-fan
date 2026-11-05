@@ -409,13 +409,21 @@ export function OrdemProducaoDetailPage() {
           {baixasMp.materiasPrimasSugeridas.length > 0 && (
             <>
               <h4>MPs do roteiro (processo produtivo)</h4>
+              {(baixasMp.pesoPeca.bruto != null ||
+                baixasMp.pesoPeca.liquido != null) && (
+                <p className="muted">
+                  Peso da peça: bruto {formatarKg(baixasMp.pesoPeca.bruto)} ·
+                  líquido {formatarKg(baixasMp.pesoPeca.liquido)}
+                </p>
+              )}
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
                       <th>Código</th>
                       <th>Descrição</th>
-                      <th>Peso ref.</th>
+                      <th>Consumo MP/peça</th>
+                      <th>Total da OP</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -423,7 +431,20 @@ export function OrdemProducaoDetailPage() {
                       <tr key={m.codigo}>
                         <td className="mono">{m.codigo}</td>
                         <td>{m.descricao ?? '—'}</td>
-                        <td>{m.peso ?? '—'}</td>
+                        <td>
+                          {m.peso != null
+                            ? `${m.peso.toLocaleString('pt-BR', {
+                                maximumFractionDigits: 8,
+                              })}${m.unidade ? ` ${m.unidade}` : ''}`
+                            : '—'}
+                        </td>
+                        <td>
+                          {m.pesoTotal != null
+                            ? `${m.pesoTotal.toLocaleString('pt-BR', {
+                                maximumFractionDigits: 3,
+                              })}${m.unidade ? ` ${m.unidade}` : ''}`
+                            : '—'}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -557,4 +578,10 @@ export function OrdemProducaoDetailPage() {
     </section>
     </>
   );
+}
+
+function formatarKg(valor: number | null) {
+  return valor != null
+    ? `${valor.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} kg`
+    : '—';
 }

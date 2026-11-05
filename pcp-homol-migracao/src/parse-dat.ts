@@ -87,10 +87,23 @@ export function parseRegistro(
   return resultado;
 }
 
-/** Resolve caminho do arquivo legado a partir de LEGACY_DATA_PATH no .env */
+/**
+ * Resolve caminho do arquivo legado a partir de LEGACY_DATA_PATH no .env.
+ * Se o arquivo não existir lá, tenta LEGACY_DATA_PATH_FALLBACK (backup anterior)
+ * — o backup mais novo pode não trazer todos os arquivos (ex.: PCPA70XI.DAT).
+ */
 export function caminhoLegado(nomeArquivo: string): string {
   const base =
     process.env.LEGACY_DATA_PATH ?? '/Users/scominato/FANANDRI';
   const path = require('path') as typeof import('path');
-  return path.join(base, nomeArquivo);
+  const principal = path.join(base, nomeArquivo);
+  const fallbackBase = process.env.LEGACY_DATA_PATH_FALLBACK;
+  if (fs.existsSync(principal) || !fallbackBase) return principal;
+
+  const alternativo = path.join(fallbackBase, nomeArquivo);
+  if (fs.existsSync(alternativo)) {
+    console.warn(`  (fallback) ${nomeArquivo} lido de ${fallbackBase}`);
+    return alternativo;
+  }
+  return principal;
 }

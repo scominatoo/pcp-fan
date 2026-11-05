@@ -51,9 +51,13 @@ export type PrepararCriacaoOp = {
   }>;
 };
 
+/** Peso da peça (kg) do cadastro de processo — null quando não cadastrado. */
+export type PesoPeca = { bruto: number | null; liquido: number | null };
+
 export type EmissaoOp = {
   op: OrdemProducao;
   tipoLabel: string;
+  pesoPeca: PesoPeca;
   materiasPrimas: Array<{
     materiaPrimaId: number | null;
     codigo: string;
@@ -61,6 +65,8 @@ export type EmissaoOp = {
     descricaoComplementar: string | null;
     unidade: string | null;
     peso: number | null;
+    /** quantidade da OP × consumo por peça */
+    pesoTotal: number | null;
   }>;
   operacoes: Array<{
     numeroOperacao: number;
@@ -260,11 +266,15 @@ export type OpBaixasMp = {
     baixadaMp: boolean;
     produtoCodigo: string;
   };
+  pesoPeca: PesoPeca;
   materiasPrimasSugeridas: Array<{
     materiaPrimaId: number | null;
     codigo: string;
     descricao: string | null;
+    unidade: string | null;
     peso: number | null;
+    /** quantidade da OP × consumo por peça */
+    pesoTotal: number | null;
   }>;
   baixas: Array<{
     id: number;

@@ -121,7 +121,7 @@ Cada arquivo indexado tem um **passo físico** (distância entre registros no `.
 | `PCPA28I.DAT` | 130 | 64 | 62 |
 | `PCPA28II.DAT` | 130 | 172 | 168 |
 | `PCPA28E.DAT` | 130 | 76 | 74 |
-| `PCPA70I.DAT` | 130 | 150 | 146 |
+| `PCPA70I.DAT` | 130 | 148 | 146 |
 | `PCPA70XI.DAT` | 128 | 672 | 668 (`skipIndiceBytes=2`) |
 
 Código: `pcp-homol-migracao/src/ler-indexed-dat.ts`  

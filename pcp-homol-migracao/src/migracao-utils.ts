@@ -109,20 +109,30 @@ export function flagSn(valor: string): boolean {
 }
 
 /** Extrai MPs do layout PCPA70I */
+/**
+ * Peso bruto da MP por peça — PIC 9(03)V9(08): 11 dígitos, 8 decimais implícitos.
+ * Retorna null para zero ou conteúdo não numérico (lixo de registro).
+ */
+export function parsePesoMpCobol(raw: string): number | null {
+  const texto = raw.trim();
+  if (!/^\d+$/.test(texto)) return null;
+  const valor = parseInt(texto, 10) / 1e8;
+  return valor > 0 ? valor : null;
+}
+
 export function extrairMpsProcesso(r: Record<string, string | number>) {
   const mps = [];
   for (let i = 1; i <= 5; i++) {
     const classe = String(r[`mp${i}Classe`]).trim();
     const item = r[`mp${i}Item`] as number;
-    const peso = String(r[`mp${i}Peso`]).trim();
-    if (!classe && item === 0) continue;
+    if (!classe || !item) continue;
     const letra = classe.charAt(0) || ' ';
     const numero = parseInt(classe.slice(1), 10) || 0;
     mps.push({
       classeLetra: letra,
       classeNumero: numero,
       itemCodigo: item,
-      peso: peso || null,
+      peso: parsePesoMpCobol(String(r[`mp${i}Peso`])),
     });
   }
   return mps.length ? mps : null;
