@@ -48,25 +48,32 @@ git clone git@github.com:scominatoo/pcp-fan.git
 cd pcp-fan
 ```
 
-## Subir o ambiente
+## Produção
+
+Instalação no servidor, `.env`, backup, deploy e checklist de go-live:
+[pcp-homol-docs/docs/20-producao.md](pcp-homol-docs/docs/20-producao.md).
+
+Atualizar o servidor: `scripts/deploy.sh`.
+
+## Desenvolvimento local
 
 ```bash
-# 1. Banco (Docker) — na pasta da API
+# API
 cd pcp-homol-api
 docker compose up -d
 cp .env.example .env   # se ainda não existir
 npm ci
 npx prisma migrate deploy
-npm run build
-npm run start:prod
+npm run start:dev
 
-# 2. Frontend
-cd ../pcp-homol-web
+# Frontend (outro terminal)
+cd pcp-homol-web
 cp .env.example .env
 npm ci
-npm run build
-npm run preview   # ou sirva a pasta dist/ com nginx
+npm run dev
 ```
+
+Testes da API: ver seção "Testes" em `20-producao.md`.
 
 ## Documentação
 

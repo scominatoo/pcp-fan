@@ -1,0 +1,11 @@
+[Unit]
+Description=PCP Homologacao — backup diário do PostgreSQL
+After=pcp-postgres.service
+Requires=pcp-postgres.service
+
+[Service]
+Type=oneshot
+User=pcp
+Group=pcp
+WorkingDirectory=/home/pcp/pcp-fan
+ExecStart=/home/pcp/pcp-fan/scripts/backup/pcp-backup.sh diario

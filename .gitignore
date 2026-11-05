@@ -22,3 +22,6 @@ dados-legado/*.IDX
 .agents/
 skills-lock.json
 backups/
+
+# Config local do backup (destino remoto)
+scripts/backup/backup.env
