@@ -7,7 +7,7 @@ import { Pagination } from '../../components/Pagination';
 
 /**
  * Listagem do cadastro de processo produtivo (legado PC1070).
- * Só consulta — a edição ainda não faz parte do escopo de homologação.
+ * Só consulta — a edição ainda não faz parte do escopo.
  */
 export function ProcessosPage() {
   const [page, setPage] = useState(1);

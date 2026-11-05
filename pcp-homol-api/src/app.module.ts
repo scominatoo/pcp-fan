@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { validateEnv } from './config/validate-env';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -20,7 +22,10 @@ import { SecoesModule } from './secoes/secoes.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validate: validateEnv,
     }),
+    // Usado só no login (LoginThrottlerGuard): 5 tentativas por minuto
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 5 }]),
     AuthModule,
     PrismaModule,
     HealthModule,

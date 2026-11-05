@@ -119,7 +119,7 @@ export function ClienteDetailPage() {
       </section>
 
       <p className="muted">
-        Nesta homologação o cadastro é somente consulta. Na OP, o nome do
+        Por enquanto o cadastro é somente consulta. Na OP, o nome do
         cliente ainda é gravado como texto (como no COBOL PCPA28II).
       </p>
     </>

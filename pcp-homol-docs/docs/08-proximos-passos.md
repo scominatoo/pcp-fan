@@ -122,7 +122,7 @@ automatizável neste ambiente).
 | C2 | Criar repo `pcp-homol-web` | `frontend/` | ✅ |
 | C3 | Criar repo `pcp-homol-migracao` | `tools/migracao/` | ✅ |
 | C4 | Repo `pcp-homol-docs` separado | `docs/` → `pcp-homol/pcp-homol-docs` | ✅ |
-| C5 | Ajustar CI/CD por repo | Build e deploy independentes | ⬜ |
+| C5 | Ajustar CI/CD | `scripts/deploy.sh` ✅; workflow pronto em `scripts/ci/github-actions-ci.yml`, falta ativar no GitHub — ver `20-producao.md` | 🔄 |
 
 > Repositórios locais em `/Users/scominato/pcp-homol/pcp-homol-{api,web,migracao,docs}`.  
 > Pastas legadas do monorepo (`backend/`, `frontend/`, `tools/`, `docs/`) removidas em 10/07/2026.

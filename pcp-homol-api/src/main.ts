@@ -1,9 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Atrás do nginx: usa o IP real do cliente (X-Forwarded-For) no limite de login
+  app.set('trust proxy', 'loopback');
+  app.use(helmet());
 
   // Prefixo /api para todas as rotas
   app.setGlobalPrefix('api');
@@ -30,7 +36,7 @@ async function bootstrap() {
   // Porta da API: BACKEND_PORT no .env (neste servidor = 3000)
   const port = Number(process.env.BACKEND_PORT ?? 3000);
   await app.listen(port);
-  console.log(`PCP Homologação API rodando em http://localhost:${port}/api`);
+  console.log(`PCP API rodando em http://localhost:${port}/api`);
 }
 
 bootstrap();

@@ -3,6 +3,9 @@ import { useAuth } from '../auth/AuthContext';
 
 import { PERMISSOES_RELATORIOS } from '../auth/permissoes';
 
+/** Selo do ambiente (ex.: "Homologação"). Vazio em produção = sem selo. */
+const AMBIENTE = import.meta.env.VITE_AMBIENTE?.trim();
+
 type NavItem = { to: string; label: string; end?: boolean; perm?: string[] };
 
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
@@ -100,7 +103,7 @@ export function Layout() {
           >
             Sair
           </button>
-          <span className="badge badge-env">Homologação</span>
+          {AMBIENTE && <span className="badge badge-env">{AMBIENTE}</span>}
         </footer>
       </aside>
 
@@ -109,7 +112,7 @@ export function Layout() {
           <Outlet />
         </main>
         <footer className="app-footer">
-          PCP Homologação · Indústria Metalúrgica FANANDRI
+          PCP · Indústria Metalúrgica FANANDRI
         </footer>
       </div>
     </div>
