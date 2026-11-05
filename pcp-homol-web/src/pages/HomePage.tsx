@@ -81,7 +81,7 @@ export function HomePage() {
         <PageHeader
           eyebrow="Planejamento e controle da produção"
           title="Chão de fábrica, em tempo real."
-          subtitle="Homologação do módulo PCP com dados reais migrados do sistema legado — pronto para validação lado a lado com o COBOL."
+          subtitle="Ordens de produção, baixas, programação e relatórios da FANANDRI em um só lugar."
         />
         <div className="hero-meta">
           <div className="hero-stat">

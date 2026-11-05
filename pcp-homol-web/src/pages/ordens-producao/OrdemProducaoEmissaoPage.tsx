@@ -43,7 +43,7 @@ export function OrdemProducaoEmissaoPage() {
       <article className="emissao-doc">
         <header className="emissao-header">
           <h1>Ordem de Produção</h1>
-          <p className="emissao-empresa">FANANDRI — PCP Homologação</p>
+          <p className="emissao-empresa">FANANDRI — PCP</p>
         </header>
 
         <section className="emissao-bloco">
@@ -184,8 +184,7 @@ export function OrdemProducaoEmissaoPage() {
         <footer className="emissao-footer">
           <small>
             Emitido em{' '}
-            {new Date(data.emitidoEm).toLocaleString('pt-BR')} — sistema PCP
-            Homologação
+            {new Date(data.emitidoEm).toLocaleString('pt-BR')} — sistema PCP FANANDRI
           </small>
         </footer>
 

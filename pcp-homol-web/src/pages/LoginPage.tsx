@@ -83,7 +83,7 @@ export function LoginPage() {
           </button>
         </form>
 
-        <p className="login-footer">Ambiente de homologação · dados migrados do legado</p>
+        <p className="login-footer">Indústria Metalúrgica FANANDRI</p>
       </div>
     </div>
   );
