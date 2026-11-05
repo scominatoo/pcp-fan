@@ -6,10 +6,13 @@ import {
   criarMateriaPrima,
   obterMateriaPrima,
 } from '../../api/materia-prima';
+import { useAuth } from '../../auth/AuthContext';
 
 export function MateriaPrimaFormPage() {
   const { id } = useParams();
   const isNovo = id === 'novo';
+  const { can } = useAuth();
+  const podeSalvar = can(isNovo ? 'materia_prima.criar' : 'materia_prima.editar');
   const mpId = isNovo ? null : Number(id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -161,9 +164,11 @@ export function MateriaPrimaFormPage() {
         )}
 
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={salvar.isPending}>
-            {salvar.isPending ? 'Salvando...' : 'Salvar'}
-          </button>
+          {podeSalvar && (
+            <button type="submit" className="btn btn-primary" disabled={salvar.isPending}>
+              {salvar.isPending ? 'Salvando...' : 'Salvar'}
+            </button>
+          )}
         </div>
       </form>
     </section>

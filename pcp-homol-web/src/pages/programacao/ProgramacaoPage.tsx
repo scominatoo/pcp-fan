@@ -6,6 +6,7 @@ import {
   listarProgramacao,
   resumoProgramacao,
 } from '../../api/programacao';
+import { useAuth } from '../../auth/AuthContext';
 import { PageHeader } from '../../components/PageHeader';
 import { Pagination } from '../../components/Pagination';
 
@@ -15,6 +16,7 @@ function formatarData(iso: string | null) {
 }
 
 export function ProgramacaoPage() {
+  const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [busca, setBusca] = useState('');
@@ -68,9 +70,11 @@ export function ProgramacaoPage() {
         eyebrow="Planejamento"
         title="Programação de entregas"
         actions={
-          <Link to="/programacao/novo" className="btn btn-primary">
-            Nova programação
-          </Link>
+          can('programacao.criar') && (
+            <Link to="/programacao/novo" className="btn btn-primary">
+              Nova programação
+            </Link>
+          )
         }
       />
 

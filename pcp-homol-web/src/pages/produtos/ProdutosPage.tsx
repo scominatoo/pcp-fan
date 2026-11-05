@@ -2,10 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listarProdutos } from '../../api/produtos';
+import { useAuth } from '../../auth/AuthContext';
 import { PageHeader } from '../../components/PageHeader';
 import { Pagination } from '../../components/Pagination';
 
 export function ProdutosPage() {
+  const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [busca, setBusca] = useState('');
@@ -28,9 +30,11 @@ export function ProdutosPage() {
       <section className="card">
       <div className="toolbar">
         <h2>Listagem</h2>
-        <Link to="/produtos/novo" className="btn btn-primary">
-          Novo produto
-        </Link>
+        {can('produtos.criar') && (
+          <Link to="/produtos/novo" className="btn btn-primary">
+            Novo produto
+          </Link>
+        )}
       </div>
 
       <form className="search-form" onSubmit={aplicarBusca}>

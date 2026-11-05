@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listarOps } from '../../api/ordens-producao';
+import { useAuth } from '../../auth/AuthContext';
 import { PageHeader } from '../../components/PageHeader';
 import { Pagination } from '../../components/Pagination';
 
@@ -11,6 +12,7 @@ function formatarData(iso: string | null) {
 }
 
 export function OrdensProducaoPage() {
+  const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [busca, setBusca] = useState('');
@@ -39,9 +41,11 @@ export function OrdensProducaoPage() {
         eyebrow="Produção"
         title="Ordens de produção"
         actions={
-          <Link to="/ordens-producao/novo" className="btn btn-primary">
-            Nova OP
-          </Link>
+          can('ordens_producao.criar') && (
+            <Link to="/ordens-producao/novo" className="btn btn-primary">
+              Nova OP
+            </Link>
+          )
         }
       />
 

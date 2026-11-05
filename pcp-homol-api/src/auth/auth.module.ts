@@ -5,9 +5,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { PermissionsGuard } from './permissions.guard';
+import { UsuariosModule } from '../usuarios/usuarios.module';
 
 @Module({
   imports: [
+    UsuariosModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -25,6 +28,8 @@ import { JwtAuthGuard } from './jwt-auth.guard';
     AuthService,
     // Protege todas as rotas da API, exceto as marcadas com @Public()
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    // Depois do login, confere as permissões exigidas por @RequirePermission()
+    { provide: APP_GUARD, useClass: PermissionsGuard },
   ],
   exports: [AuthService, JwtModule],
 })

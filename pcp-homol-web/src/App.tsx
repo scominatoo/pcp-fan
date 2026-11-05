@@ -1,7 +1,12 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { Layout } from './components/Layout';
+import { PERMISSOES_RELATORIOS, permissaoRelatorio } from './auth/permissoes';
 import { RequireAuth } from './components/RequireAuth';
+import {
+  RequireFormPermission,
+  RequirePermission,
+} from './components/RequirePermission';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { MateriaPrimaFormPage } from './pages/materia-prima/MateriaPrimaFormPage';
@@ -21,6 +26,19 @@ import { ProdutoFormPage } from './pages/produtos/ProdutoFormPage';
 import { ProdutosPage } from './pages/produtos/ProdutosPage';
 import { ClienteDetailPage } from './pages/clientes/ClienteDetailPage';
 import { ClientesPage } from './pages/clientes/ClientesPage';
+import { TrocarSenhaPage } from './pages/TrocarSenhaPage';
+import { UsuarioFormPage } from './pages/usuarios/UsuarioFormPage';
+import { UsuariosPage } from './pages/usuarios/UsuariosPage';
+
+/** Cada relatório tem a sua permissão. */
+function RelatorioRoute() {
+  const { tipo } = useParams();
+  return (
+    <RequirePermission perm={permissaoRelatorio(tipo ?? '')}>
+      <RelatorioPage />
+    </RequirePermission>
+  );
+}
 
 export default function App() {
   return (
@@ -32,32 +50,49 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route element={<Layout />}>
               <Route index element={<HomePage />} />
-              <Route path="produtos" element={<ProdutosPage />} />
-              <Route path="produtos/:id" element={<ProdutoFormPage />} />
-              <Route path="processos" element={<ProcessosPage />} />
-              <Route path="processos/:id" element={<ProcessoDetailPage />} />
-              <Route path="materia-prima" element={<MateriaPrimaPage />} />
-              <Route path="materia-prima/:id" element={<MateriaPrimaFormPage />} />
-              <Route path="clientes" element={<ClientesPage />} />
-              <Route path="clientes/:id" element={<ClienteDetailPage />} />
-              <Route path="ordens-producao" element={<OrdensProducaoPage />} />
+              <Route path="produtos" element={<RequirePermission perm="produtos.ver"><ProdutosPage /></RequirePermission>} />
+              <Route path="produtos/:id" element={<RequireFormPermission modulo="produtos"><ProdutoFormPage /></RequireFormPermission>} />
+              <Route path="processos" element={<RequirePermission perm="processos.ver"><ProcessosPage /></RequirePermission>} />
+              <Route path="processos/:id" element={<RequirePermission perm="processos.ver"><ProcessoDetailPage /></RequirePermission>} />
+              <Route path="materia-prima" element={<RequirePermission perm="materia_prima.ver"><MateriaPrimaPage /></RequirePermission>} />
+              <Route path="materia-prima/:id" element={<RequireFormPermission modulo="materia_prima"><MateriaPrimaFormPage /></RequireFormPermission>} />
+              <Route path="clientes" element={<RequirePermission perm="clientes.ver"><ClientesPage /></RequirePermission>} />
+              <Route path="clientes/:id" element={<RequirePermission perm="clientes.ver"><ClienteDetailPage /></RequirePermission>} />
+              <Route path="ordens-producao" element={<RequirePermission perm="ordens_producao.ver"><OrdensProducaoPage /></RequirePermission>} />
               <Route
                 path="ordens-producao/novo"
-                element={<OrdemProducaoFormPage />}
+                element={<RequirePermission perm="ordens_producao.criar"><OrdemProducaoFormPage /></RequirePermission>}
               />
               <Route
                 path="ordens-producao/:id/emissao"
-                element={<OrdemProducaoEmissaoPage />}
+                element={<RequirePermission perm="ordens_producao.imprimir"><OrdemProducaoEmissaoPage /></RequirePermission>}
               />
               <Route
                 path="ordens-producao/:id"
-                element={<OrdemProducaoDetailPage />}
+                element={<RequirePermission perm="ordens_producao.ver"><OrdemProducaoDetailPage /></RequirePermission>}
               />
-              <Route path="programacao" element={<ProgramacaoPage />} />
-              <Route path="programacao/novo" element={<ProgramacaoFormPage />} />
-              <Route path="programacao/:id" element={<ProgramacaoDetailPage />} />
-              <Route path="relatorios" element={<RelatoriosHubPage />} />
-              <Route path="relatorios/:tipo" element={<RelatorioPage />} />
+              <Route path="programacao" element={<RequirePermission perm="programacao.ver"><ProgramacaoPage /></RequirePermission>} />
+              <Route path="programacao/novo" element={<RequirePermission perm="programacao.criar"><ProgramacaoFormPage /></RequirePermission>} />
+              <Route path="programacao/:id" element={<RequirePermission perm="programacao.ver"><ProgramacaoDetailPage /></RequirePermission>} />
+              <Route path="relatorios" element={<RequirePermission perm={PERMISSOES_RELATORIOS}><RelatoriosHubPage /></RequirePermission>} />
+              <Route path="relatorios/:tipo" element={<RelatorioRoute />} />
+              <Route
+                path="usuarios"
+                element={
+                  <RequirePermission perm="usuarios.gerenciar">
+                    <UsuariosPage />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="usuarios/:id"
+                element={
+                  <RequirePermission perm="usuarios.gerenciar">
+                    <UsuarioFormPage />
+                  </RequirePermission>
+                }
+              />
+              <Route path="trocar-senha" element={<TrocarSenhaPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Route>

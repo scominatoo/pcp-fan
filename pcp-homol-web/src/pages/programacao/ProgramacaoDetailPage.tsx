@@ -5,6 +5,7 @@ import {
   obterProgramacao,
   registrarEntregaProgramacao,
 } from '../../api/programacao';
+import { useAuth } from '../../auth/AuthContext';
 import { PageHeader } from '../../components/PageHeader';
 import { LoadingState } from '../../components/StateMessage';
 
@@ -14,6 +15,7 @@ function formatarData(iso: string | null) {
 }
 
 export function ProgramacaoDetailPage() {
+  const { can } = useAuth();
   const { id } = useParams();
   const progId = Number(id);
   const queryClient = useQueryClient();
@@ -99,7 +101,7 @@ export function ProgramacaoDetailPage() {
         <dd>{prog.devolvido ? 'Sim' : 'Não'}</dd>
       </dl>
 
-      {podeEntregar && (
+      {podeEntregar && can('programacao.registrar_entrega') && (
         <>
           <h3>Registrar entrega</h3>
           <form className="form-grid" onSubmit={submitEntrega}>
