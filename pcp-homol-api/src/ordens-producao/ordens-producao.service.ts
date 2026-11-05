@@ -410,11 +410,12 @@ export class OrdensProducaoService {
       ...(await this.resolverMpsPecas(op.produtoCodigo, chavesResolvidas)),
     );
 
-    const requisicoes = await this.obterOuCriarRequisicoes(op.id, itensMp);
+    const requisicoes = await this.obterOuCriarRequisicoes(op.id, op.quantidade, itensMp);
 
     return {
       op: serializeOrdemProducao(op, true),
       tipoLabel: labelTipoOp(op.tipo),
+      pesoPeca: pesoPecaProcesso(processo),
       materiasPrimas: itensMp.map(
         ({ materiaPrimaId, codigo, descricao, descricaoComplementar, unidade, peso }) => ({
           materiaPrimaId,
@@ -423,6 +424,7 @@ export class OrdensProducaoService {
           descricaoComplementar,
           unidade,
           peso,
+          pesoTotal: quantidadeRequisicao(op.quantidade, peso),
         }),
       ),
       operacoes,
@@ -712,7 +714,11 @@ export class OrdensProducaoService {
         baixadaMp: op.baixadaMp,
         produtoCodigo: op.produtoCodigo,
       },
-      materiasPrimasSugeridas: mpsSugeridas,
+      pesoPeca: pesoPecaProcesso(processo),
+      materiasPrimasSugeridas: mpsSugeridas.map((mp) => ({
+        ...mp,
+        pesoTotal: quantidadeRequisicao(op.quantidade, mp.peso),
+      })),
       baixas: baixas.map((b) => ({
         id: b.id,
         materiaPrimaId: b.materiaPrimaId,
@@ -849,7 +855,7 @@ export class OrdensProducaoService {
           letra,
           numero,
           itemCodigo,
-          raw.peso != null ? Number(raw.peso) : null,
+          pesoMpPorPeca(raw.peso),
         ),
       );
     }
@@ -925,6 +931,7 @@ export class OrdensProducaoService {
    */
   private async obterOuCriarRequisicoes(
     ordemProducaoId: number,
+    quantidadeOp: number,
     itensMp: Array<{
       materiaPrimaId: number | null;
       codigo: string;
@@ -950,6 +957,8 @@ export class OrdensProducaoService {
     let itemOrdem = 0;
     for (const mp of itensMp) {
       itemOrdem += 1;
+      // Paridade PC1041: WQTDE-CONSULTA = OP-QUANTIDADE * PROCESSO-PESO-BRUTO-MP
+      const quantidade = quantidadeRequisicao(quantidadeOp, mp.peso);
 
       let requisicao = await this.prisma.requisicaoMaterial.findUnique({
         where: {
@@ -967,6 +976,7 @@ export class OrdensProducaoService {
           ordemProducaoId,
           itemOrdem,
           mp,
+          quantidade,
         );
       }
 
@@ -977,7 +987,7 @@ export class OrdensProducaoService {
         descricao: mp.descricao,
         descricaoComplementar: mp.descricaoComplementar,
         unidade: mp.unidade,
-        quantidade: mp.peso,
+        quantidade,
       });
     }
 
@@ -994,6 +1004,7 @@ export class OrdensProducaoService {
       classeNumero: number;
       itemCodigo: number;
     },
+    quantidade: number | null,
     tentativas = 5,
   ) {
     const ano = new Date().getFullYear() % 100;
@@ -1015,7 +1026,7 @@ export class OrdensProducaoService {
             classeNumero: mp.classeNumero,
             itemCodigo: mp.itemCodigo,
             materiaPrimaId: mp.materiaPrimaId,
-            quantidade: mp.peso,
+            quantidade,
           },
         });
       } catch (e) {
@@ -1240,4 +1251,43 @@ export class OrdensProducaoService {
       },
     });
   }
+}
+
+/**
+ * Peso bruto da MP por peça (PCPA70I/70C, PIC 9(03)V9(08)).
+ * Aceita número já decodificado ou o texto cru de 11 dígitos gravado por
+ * migrações antigas (8 decimais implícitos).
+ */
+export function pesoMpPorPeca(raw: unknown): number | null {
+  if (raw == null) return null;
+  if (typeof raw === 'number') return raw > 0 ? raw : null;
+  const texto = String(raw).trim();
+  if (!/^\d+$/.test(texto)) return null;
+  const valor = texto.length === 11 ? parseInt(texto, 10) / 1e8 : Number(texto);
+  return valor > 0 ? valor : null;
+}
+
+/** Quantidade da requisição: quantidade da OP × peso por peça (3 casas, como WQTDE-CONSULTA 9(06)V999). */
+export function quantidadeRequisicao(
+  quantidadeOp: number,
+  pesoPorPeca: number | null,
+): number | null {
+  if (pesoPorPeca == null) return null;
+  return Math.round(quantidadeOp * pesoPorPeca * 1000) / 1000;
+}
+
+/**
+ * Peso da peça cadastrado no processo (PCPA70I: PROCESSO-PESO-BRUTO e
+ * PROCESSO-PESO-LIQUIDO, em kg). Zerado no legado para a maioria dos produtos.
+ */
+function pesoPecaProcesso(
+  processo: { pesoBruto: Prisma.Decimal | null; pesoLiquido: Prisma.Decimal | null } | null,
+) {
+  const bruto = processo?.pesoBruto != null ? Number(processo.pesoBruto) : null;
+  const liquido =
+    processo?.pesoLiquido != null ? Number(processo.pesoLiquido) : null;
+  return {
+    bruto: bruto && bruto > 0 ? bruto : null,
+    liquido: liquido && liquido > 0 ? liquido : null,
+  };
 }

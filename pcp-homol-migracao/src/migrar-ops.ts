@@ -96,20 +96,40 @@ function resolverProdutoId(
   );
 }
 
+/** Executa upserts em lotes dentro de transações (desempenho). */
+async function executarEmLotes<T>(
+  itens: T[],
+  tamanho: number,
+  fn: (item: T) => Prisma.PrismaPromise<unknown>,
+  rotulo: string,
+) {
+  let ok = 0;
+  let erros = 0;
+  for (let i = 0; i < itens.length; i += tamanho) {
+    const lote = itens.slice(i, i + tamanho);
+    try {
+      await prisma.$transaction(lote.map(fn));
+      ok += lote.length;
+    } catch (e) {
+      erros += lote.length;
+      if (erros <= tamanho) console.error(`Erro lote ${rotulo}:`, e);
+    }
+    if ((i / tamanho) % 20 === 0 && i > 0) console.log(`  ... ${ok} ${rotulo}`);
+  }
+  return { ok, erros };
+}
+
+/**
+ * Carga incremental: cria OPs novas e atualiza as existentes pelo código.
+ * Não apaga nada — baixas e requisições lançadas no sistema novo ficam
+ * ligadas às OPs (FK com cascade).
+ */
 async function migrarOps(lookup: LookupProduto) {
   const caminho = caminhoLegado('PCPA28I.DAT');
   const registros = lerRegistrosIndexados(caminho, INDEXED_PCPA28I);
 
-  console.log('Limpando OPs anteriores...');
-  await prisma.ordemProducaoOperacao.deleteMany({});
-  await prisma.ordemProducao.deleteMany({});
-
-  let ok = 0;
-  let erros = 0;
-  const opPorCodigo = new Map<number, number>();
-
-  console.log('Gravando cabeçalhos de OP...');
-  const batch: Prisma.OrdemProducaoCreateManyInput[] = [];
+  const antes = await prisma.ordemProducao.count();
+  const dados: Prisma.OrdemProducaoCreateInput[] = [];
   const codigosVistos = new Set<number>();
 
   for (const buf of registros) {
@@ -120,61 +140,54 @@ async function migrarOps(lookup: LookupProduto) {
 
     const produtoCodigo = normalizarProdutoCodigo(String(r.produto));
     const produtoId = resolverProdutoId(produtoCodigo, lookup);
-    const dataAbertura = dataCobol(
-      r.ano as number,
-      r.mes as number,
-      r.dia as number,
-    );
-    const horaAbertura = horaCobol(
-      r.hora as number,
-      r.minuto as number,
-      r.segundo as number,
-    );
 
-    batch.push({
+    dados.push({
       codigo,
       produtoCodigo,
-      produtoId,
+      ...(produtoId ? { produto: { connect: { id: produtoId } } } : {}),
       quantidade: (r.quantidade as number) || 0,
-      dataAbertura,
-      horaAbertura,
+      dataAbertura: dataCobol(
+        r.ano as number,
+        r.mes as number,
+        r.dia as number,
+      ),
+      horaAbertura: horaCobol(
+        r.hora as number,
+        r.minuto as number,
+        r.segundo as number,
+      ),
       baixada: flagSn(String(r.baixada)),
       baixadaMp: flagSn(String(r.baixadaMp)),
       baixadaProduto: flagSn(String(r.baixadaProduto)),
       tipoProc: sanitizarTexto(String(r.tipoProc)) || null,
       tipo: sanitizarTexto(String(r.tipo)) || null,
     });
-
-    if (batch.length >= 1000) {
-      try {
-        await prisma.ordemProducao.createMany({
-          data: batch,
-          skipDuplicates: true,
-        });
-        ok += batch.length;
-      } catch (e) {
-        erros += batch.length;
-        if (erros <= 1000) console.error('Erro batch OP:', e);
-      }
-      batch.length = 0;
-      if (ok % 10000 === 0) console.log(`  ... ${ok} OPs`);
-    }
   }
 
-  if (batch.length > 0) {
-    try {
-      await prisma.ordemProducao.createMany({ data: batch });
-      ok += batch.length;
-    } catch (e) {
-      erros += batch.length;
-      console.error('Erro batch final OP:', e);
-    }
-  }
+  console.log(`Gravando ${dados.length} cabeçalhos de OP (upsert)...`);
+  const { ok, erros } = await executarEmLotes(
+    dados,
+    500,
+    (d) => {
+      const { codigo, produto, ...resto } = d;
+      return prisma.ordemProducao.upsert({
+        where: { codigo },
+        create: d,
+        update: {
+          ...resto,
+          ...(produto ? { produto } : {}),
+        },
+      });
+    },
+    'OPs',
+  );
 
+  const opPorCodigo = new Map<number, number>();
   const ops = await prisma.ordemProducao.findMany({
     select: { id: true, codigo: true },
   });
   for (const op of ops) opPorCodigo.set(op.codigo, op.id);
+  const novas = ops.length - antes;
 
   await prisma.migracaoLog.create({
     data: {
@@ -182,10 +195,11 @@ async function migrarOps(lookup: LookupProduto) {
       registrosLidos: registros.length,
       registrosOk: ok,
       registrosErro: erros,
+      mensagem: `incremental: ${novas} OPs novas`,
     },
   });
 
-  console.log(`✓ OPs: ${ok} gravadas, ${erros} erros`);
+  console.log(`✓ OPs: ${ok} gravadas (${novas} novas), ${erros} erros`);
   return opPorCodigo;
 }
 
@@ -236,38 +250,25 @@ async function migrarOperacoesOp(opPorCodigo: Map<number, number>) {
   const caminho = caminhoLegado('PCPA28E.DAT');
   const registros = lerRegistrosIndexados(caminho, INDEXED_PCPA28E);
 
-  console.log('Gravando operações de OP...');
-  await prisma.ordemProducaoOperacao.deleteMany({});
-
-  let ok = 0;
-  let erros = 0;
   let ignorados = 0;
-
-  const batch: Prisma.OrdemProducaoOperacaoCreateManyInput[] = [];
+  const dados: Prisma.OrdemProducaoOperacaoUncheckedCreateInput[] = [];
+  const chavesVistas = new Set<string>();
 
   for (const buf of registros) {
     const r = parseRegistro(buf, LAYOUT_PCPA28E);
     const codigoOp = r.codigoOp as number;
     const numeroOperacao = r.numeroOperacao as number;
 
-    if (codigoOp === 0 || numeroOperacao === 0) {
-      ignorados++;
-      continue;
-    }
-
     const ordemProducaoId = opPorCodigo.get(codigoOp);
-    if (!ordemProducaoId) {
+    if (codigoOp === 0 || numeroOperacao === 0 || !ordemProducaoId) {
       ignorados++;
       continue;
     }
+    const chave = `${ordemProducaoId}-${numeroOperacao}`;
+    if (chavesVistas.has(chave)) continue;
+    chavesVistas.add(chave);
 
-    const dataEncerramento = dataCobol(
-      r.anoEncerramento as number,
-      r.mesEncerramento as number,
-      r.diaEncerramento as number,
-    );
-
-    batch.push({
+    dados.push({
       ordemProducaoId,
       numeroOperacao,
       equipamentoGrupo: (r.equipamentoGrupo as number) || null,
@@ -276,37 +277,30 @@ async function migrarOperacoesOp(opPorCodigo: Map<number, number>) {
       ferramentaFabrica: sanitizarTexto(String(r.ferramentaFabrica)) || null,
       ferramentaNumero: sanitizarTexto(String(r.ferramentaNumero)) || null,
       ferramentaMatricula: (r.ferramentaMatricula as number) || null,
-      dataEncerramento,
+      dataEncerramento: dataCobol(
+        r.anoEncerramento as number,
+        r.mesEncerramento as number,
+        r.diaEncerramento as number,
+      ),
     });
-
-    if (batch.length >= 1000) {
-      try {
-        const result = await prisma.ordemProducaoOperacao.createMany({
-          data: batch,
-          skipDuplicates: true,
-        });
-        ok += result.count;
-      } catch (e) {
-        erros += batch.length;
-        if (erros <= 1000) console.error('Erro batch OP operações:', e);
-      }
-      batch.length = 0;
-      if (ok % 10000 === 0 && ok > 0) console.log(`  ... ${ok} operações`);
-    }
   }
 
-  if (batch.length > 0) {
-    try {
-      const result = await prisma.ordemProducaoOperacao.createMany({
-        data: batch,
-        skipDuplicates: true,
+  console.log(`Gravando ${dados.length} operações de OP (upsert)...`);
+  const { ok, erros } = await executarEmLotes(
+    dados,
+    500,
+    (d) => {
+      const { ordemProducaoId, numeroOperacao, ...resto } = d;
+      return prisma.ordemProducaoOperacao.upsert({
+        where: {
+          ordemProducaoId_numeroOperacao: { ordemProducaoId, numeroOperacao },
+        },
+        create: d,
+        update: resto,
       });
-      ok += result.count;
-    } catch (e) {
-      erros += batch.length;
-      console.error('Erro batch final OP operações:', e);
-    }
-  }
+    },
+    'operações',
+  );
 
   await prisma.migracaoLog.create({
     data: {
@@ -314,7 +308,7 @@ async function migrarOperacoesOp(opPorCodigo: Map<number, number>) {
       registrosLidos: registros.length,
       registrosOk: ok,
       registrosErro: erros,
-      mensagem: `${ignorados} slots vazios ou sem OP pai`,
+      mensagem: `incremental: ${ignorados} slots vazios ou sem OP pai`,
     },
   });
 

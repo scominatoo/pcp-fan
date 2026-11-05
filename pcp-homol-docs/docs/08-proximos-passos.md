@@ -254,7 +254,7 @@ Detalhes completos, layout COBOL e plano em [`19-auditoria-completude-op.md`](./
 | `PCPA76I.DAT` | 130 | 76 | 66 | 1.563 | Movimento MP |
 | `PCPA109I.DAT` | 130 | 54 | 54 | 1 | Baixa MP por OP |
 | `PCPA66I.DAT` | 130 | 108 | 105 | 1.383 | Programação entregas |
-| `PCPA70I.DAT` | 130 | 150 | 146 | 1.829 | Processo (enriquecimento) |
+| `PCPA70I.DAT` | 130 | 148 | 146 | 1.858 | Processo (enriquecimento) |
 | `PCPA70XI.DAT` | 128 | 672 | 668 | 12.618 | Roteiro (`skipIndiceBytes=2`) |
 
 **Descoberta:** `OP-PRODUTO` e `PROCESSO-PRODUTO` usam o **desenho do cliente** (ex.: `90531014`), não o código `001-01-00001`.

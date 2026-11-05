@@ -229,7 +229,8 @@ export const INDEXED_PCPA68I: ConfigArquivoIndexed = {
 export const INDEXED_PCPA70I: ConfigArquivoIndexed = {
   nomeArquivo: 'PCPA70I.DAT',
   offsetInicial: 130,
-  passoFisico: 150,
+  // 2 bytes de cabeçalho + 146 lógico = 148 (recalibrado 05/11/2026; 150 desalinhava)
+  passoFisico: 148,
   tamanhoLogico: 146,
 };
 
