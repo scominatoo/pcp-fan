@@ -593,3 +593,21 @@ model MigracaoLog {
   mensagem      String?   @db.Text
   executadoEm   DateTime  @default(now())
 }
+
+// ---------------------------------------------------------------------------
+// Usuários e permissões (não existe no legado COBOL)
+// ---------------------------------------------------------------------------
+
+model Usuario {
+  id          Int       @id @default(autoincrement())
+  username    String    @unique @db.VarChar(40) // sempre em minúsculas
+  nome        String    @db.VarChar(80)
+  senhaHash   String
+  ativo       Boolean   @default(true)
+  isAdmin     Boolean   @default(false) // superusuário: ignora a matriz
+  trocarSenha Boolean   @default(false) // obriga trocar a senha no próximo login
+  permissoes  String[]  @default([]) // chaves de src/auth/permissions.ts
+  ultimoLogin DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

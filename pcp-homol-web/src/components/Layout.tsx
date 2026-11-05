@@ -1,7 +1,11 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
-const NAV_GROUPS = [
+import { PERMISSOES_RELATORIOS } from '../auth/permissoes';
+
+type NavItem = { to: string; label: string; end?: boolean; perm?: string[] };
+
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: 'Visão geral',
     items: [{ to: '/', label: 'Painel', end: true }],
@@ -9,27 +13,36 @@ const NAV_GROUPS = [
   {
     label: 'Cadastros',
     items: [
-      { to: '/produtos', label: 'Produtos' },
-      { to: '/processos', label: 'Processos' },
-      { to: '/materia-prima', label: 'Matéria-prima' },
-      { to: '/clientes', label: 'Clientes' },
+      { to: '/produtos', label: 'Produtos', perm: ['produtos.ver'] },
+      { to: '/processos', label: 'Processos', perm: ['processos.ver'] },
+      { to: '/materia-prima', label: 'Matéria-prima', perm: ['materia_prima.ver'] },
+      { to: '/clientes', label: 'Clientes', perm: ['clientes.ver'] },
     ],
   },
   {
     label: 'Produção',
     items: [
-      { to: '/ordens-producao', label: 'Ordens de produção' },
-      { to: '/programacao', label: 'Programação' },
+      { to: '/ordens-producao', label: 'Ordens de produção', perm: ['ordens_producao.ver'] },
+      { to: '/programacao', label: 'Programação', perm: ['programacao.ver'] },
     ],
   },
   {
     label: 'Análise',
-    items: [{ to: '/relatorios', label: 'Relatórios' }],
+    items: [{ to: '/relatorios', label: 'Relatórios', perm: PERMISSOES_RELATORIOS }],
   },
-] as const;
+  {
+    label: 'Administração',
+    items: [{ to: '/usuarios', label: 'Usuários', perm: ['usuarios.gerenciar'] }],
+  },
+];
 
 export function Layout() {
-  const { user, logout } = useAuth();
+  const { user, logout, can } = useAuth();
+
+  const grupos = NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter((i) => !i.perm || i.perm.some((p) => can(p))),
+  })).filter((g) => g.items.length > 0);
   const navigate = useNavigate();
 
   function sair() {
@@ -53,14 +66,14 @@ export function Layout() {
         </div>
 
         <nav className="sidebar-nav" aria-label="Menu principal">
-          {NAV_GROUPS.map((group) => (
+          {grupos.map((group) => (
             <div key={group.label} className="nav-group">
               <span className="nav-group-label">{group.label}</span>
               {group.items.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={'end' in item ? item.end : false}
+                  end={item.end ?? false}
                   className={({ isActive }) =>
                     `nav-item${isActive ? ' nav-item--active' : ''}`
                   }
@@ -75,7 +88,10 @@ export function Layout() {
         <footer className="sidebar-footer">
           <div className="sidebar-user">
             <span className="sidebar-footer-label">Logado como</span>
-            <strong>{user?.username ?? 'admin'}</strong>
+            <strong>{user?.nome ?? user?.username ?? '…'}</strong>
+            <NavLink to="/trocar-senha" className="sidebar-link">
+              Trocar senha
+            </NavLink>
           </div>
           <button
             type="button"

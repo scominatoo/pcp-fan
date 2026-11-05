@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../auth/AuthContext';
+import { permissaoRelatorio } from '../../auth/permissoes';
 import { PageHeader } from '../../components/PageHeader';
 
 const RELATORIOS = [
@@ -40,6 +42,8 @@ const RELATORIOS = [
 ] as const;
 
 export function RelatoriosHubPage() {
+  const { can } = useAuth();
+  const visiveis = RELATORIOS.filter((r) => can(permissaoRelatorio(r.slug)));
   return (
     <>
       <PageHeader
@@ -49,7 +53,7 @@ export function RelatoriosHubPage() {
       />
 
       <div className="report-grid">
-        {RELATORIOS.map((r) => (
+        {visiveis.map((r) => (
           <Link
             key={r.slug}
             to={`/relatorios/${r.slug}`}

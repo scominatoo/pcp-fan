@@ -56,6 +56,13 @@ export async function apiFetch<T>(
     } catch {
       /* corpo vazio */
     }
+    // Senha redefinida pelo admin com troca obrigatória (vale também para
+    // quem já estava com o sistema aberto).
+    if (res.status === 403 && message.startsWith('Troque a sua senha')) {
+      if (window.location.pathname !== '/trocar-senha') {
+        window.location.href = '/trocar-senha';
+      }
+    }
     throw new ApiError(message, res.status);
   }
 

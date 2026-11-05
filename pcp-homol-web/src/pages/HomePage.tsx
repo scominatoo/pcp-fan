@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { fetchHealth } from '../api/health';
+import { useAuth } from '../auth/AuthContext';
+import { PERMISSOES_RELATORIOS } from '../auth/permissoes';
 import { PageHeader } from '../components/PageHeader';
 
 const MODULOS = [
   {
     to: '/ordens-producao',
+    perm: ['ordens_producao.ver'],
     titulo: 'Ordens de produção',
     descricao: 'Abrir, emitir, baixar e encerrar OPs.',
     stat: '72.000',
@@ -13,6 +16,7 @@ const MODULOS = [
   },
   {
     to: '/programacao',
+    perm: ['programacao.ver'],
     titulo: 'Programação',
     descricao: 'Entregas planejadas, saldos e atrasos.',
     stat: '1.383',
@@ -20,6 +24,7 @@ const MODULOS = [
   },
   {
     to: '/produtos',
+    perm: ['produtos.ver'],
     titulo: 'Produtos',
     descricao: 'Peças acabadas e códigos internos.',
     stat: '1.834',
@@ -27,6 +32,7 @@ const MODULOS = [
   },
   {
     to: '/processos',
+    perm: ['processos.ver'],
     titulo: 'Processos',
     descricao: 'Roteiros PC1070 — operações e MPs por desenho.',
     stat: '2.457',
@@ -34,6 +40,7 @@ const MODULOS = [
   },
   {
     to: '/materia-prima',
+    perm: ['materia_prima.ver'],
     titulo: 'Matéria-prima',
     descricao: 'Saldo, mínimo e máximo de estoque.',
     stat: '3.298',
@@ -41,6 +48,7 @@ const MODULOS = [
   },
   {
     to: '/clientes',
+    perm: ['clientes.ver'],
     titulo: 'Clientes',
     descricao: 'Empresas do legado PC1004 — busca com autocomplete.',
     stat: '813',
@@ -48,14 +56,17 @@ const MODULOS = [
   },
   {
     to: '/relatorios',
+    perm: PERMISSOES_RELATORIOS,
     titulo: 'Relatórios',
     descricao: 'OP aberta, setor, MP crítico e sintéticos.',
     stat: '5',
     unit: 'consultas',
   },
-] as const;
+];
 
 export function HomePage() {
+  const { can } = useAuth();
+  const modulos = MODULOS.filter((m) => m.perm.some((p) => can(p)));
   const { data, isLoading, isError } = useQuery({
     queryKey: ['health'],
     queryFn: fetchHealth,
@@ -114,7 +125,7 @@ export function HomePage() {
           </p>
         </div>
         <div className="module-grid">
-          {MODULOS.map((m) => (
+          {modulos.map((m) => (
             <Link key={m.to} to={m.to} className="module-card">
               <div className="module-card-stat">
                 <span className="module-card-number">{m.stat}</span>

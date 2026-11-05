@@ -9,6 +9,7 @@ import {
   obterBaixasOp,
   obterOp,
 } from '../../api/ordens-producao';
+import { useAuth } from '../../auth/AuthContext';
 import { PageHeader } from '../../components/PageHeader';
 import { LoadingState } from '../../components/StateMessage';
 
@@ -19,6 +20,7 @@ function formatarData(iso: string | null) {
 
 export function OrdemProducaoDetailPage() {
   const { id } = useParams();
+  const { can } = useAuth();
   const opId = Number(id);
   const queryClient = useQueryClient();
 
@@ -132,6 +134,9 @@ export function OrdemProducaoDetailPage() {
   if (!op) return null;
 
   const opAberta = !op.baixada;
+  const podeBaixarOperacao = can('ordens_producao.baixar_operacao');
+  const podeEncerrar = can('ordens_producao.encerrar');
+  const podeBaixarMp = can('ordens_producao.baixar_mp');
   const operacoesSemBaixa =
     baixas?.operacoes.filter((o) => !o.baixa) ?? [];
 
@@ -148,7 +153,7 @@ export function OrdemProducaoDetailPage() {
             >
               {op.baixada ? 'Baixada' : 'Aberta'}
             </span>
-            {opAberta && (
+            {opAberta && can('ordens_producao.imprimir') && (
               <Link to={`/ordens-producao/${op.id}/emissao`} className="btn">
                 Emitir OP
               </Link>
@@ -283,6 +288,8 @@ export function OrdemProducaoDetailPage() {
 
           {opAberta && (
             <>
+              {podeBaixarOperacao && (
+              <>
               <h4>Baixar operação (PC1132)</h4>
               <form className="form-grid" onSubmit={submitBaixaOperacao}>
                 <label>
@@ -334,7 +341,11 @@ export function OrdemProducaoDetailPage() {
                   </p>
                 )}
               </form>
+              </>
+              )}
 
+              {podeEncerrar && (
+              <>
               <h4>Encerrar OP (PC1028)</h4>
               <form className="form-grid" onSubmit={submitEncerrar}>
                 <label>
@@ -396,6 +407,8 @@ export function OrdemProducaoDetailPage() {
                   <p className="erro">{(encerrar.error as Error).message}</p>
                 )}
               </form>
+              </>
+              )}
             </>
           )}
         </>
@@ -482,7 +495,7 @@ export function OrdemProducaoDetailPage() {
             <p className="muted">Nenhuma baixa de MP registrada nesta OP.</p>
           )}
 
-          {opAberta && mpsDisponiveis.length > 0 && (
+          {opAberta && podeBaixarMp && mpsDisponiveis.length > 0 && (
             <>
               <h4>Baixar MP (PC1109)</h4>
               <form className="form-grid" onSubmit={submitBaixaMp}>

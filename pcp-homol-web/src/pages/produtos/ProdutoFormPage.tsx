@@ -8,10 +8,13 @@ import {
   listarGrupos,
   obterProduto,
 } from '../../api/produtos';
+import { useAuth } from '../../auth/AuthContext';
 
 export function ProdutoFormPage() {
   const { id } = useParams();
   const isNovo = id === 'novo';
+  const { can } = useAuth();
+  const podeSalvar = can(isNovo ? 'produtos.criar' : 'produtos.editar');
   const produtoId = isNovo ? null : Number(id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -191,9 +194,11 @@ export function ProdutoFormPage() {
         )}
 
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={salvar.isPending}>
-            {salvar.isPending ? 'Salvando...' : 'Salvar'}
-          </button>
+          {podeSalvar && (
+            <button type="submit" className="btn btn-primary" disabled={salvar.isPending}>
+              {salvar.isPending ? 'Salvando...' : 'Salvar'}
+            </button>
+          )}
         </div>
       </form>
     </section>
